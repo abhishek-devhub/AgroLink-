@@ -11,10 +11,8 @@ export default function FarmerTrackOrder() {
   const params = useParams();
   const [order, setOrder] = useState(null);
   const [copied, setCopied] = useState(false);
-<<<<<<< HEAD
-=======
   const [poolFarmers, setPoolFarmers] = useState(3);
->>>>>>> c1f543d (Add voice listing, skill pathways, demand forecast, and pooling tools)
+  const [poolFarmers, setPoolFarmers] = useState(3);
 
   useEffect(() => {
     if (!loading && (!user || user.role !== 'farmer')) router.push('/login');
@@ -109,8 +107,6 @@ export default function FarmerTrackOrder() {
               </button>
             </div>
           </div>
-<<<<<<< HEAD
-=======
 
           <div style={{ border: '1px solid #e9ecef', borderRadius: '12px', padding: '1rem' }}>
             <h3 style={{ marginTop: 0, color: 'var(--soil)', fontSize: '1rem' }}>🚚 Community Logistics Pooling</h3>
@@ -133,7 +129,6 @@ export default function FarmerTrackOrder() {
               Pooled freight estimate: <strong>₹{pooledFreight}</strong> (save ₹{estimatedSoloFreight - pooledFreight})
             </p>
           </div>
->>>>>>> c1f543d (Add voice listing, skill pathways, demand forecast, and pooling tools)
         </div>
 
         {order.supplyChainSteps[3].status === 'active' && (
