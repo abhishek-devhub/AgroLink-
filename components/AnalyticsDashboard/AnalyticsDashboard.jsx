@@ -1,50 +1,273 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import styles from './AnalyticsDashboard.module.css';
 import { useAuth } from '@/lib/auth-context';
-import { farmerAPI, buyerAPI } from '@/lib/analytics-service';
 
-function Widget({ title, icon, theme, insight, insightIcon, children }) {
+/* ────────────────────────────────────────────
+   Tiny canvas helpers – no external chart lib
+   ──────────────────────────────────────────── */
+
+function drawLine(ctx, points, color, width = 2.5, fill = false) {
+  if (points.length < 2) return;
+  ctx.beginPath();
+  ctx.moveTo(points[0].x, points[0].y);
+  for (let i = 1; i < points.length; i++) {
+    const xc = (points[i].x + points[i - 1].x) / 2;
+    const yc = (points[i].y + points[i - 1].y) / 2;
+    ctx.quadraticCurveTo(points[i - 1].x, points[i - 1].y, xc, yc);
+  }
+  ctx.lineTo(points[points.length - 1].x, points[points.length - 1].y);
+  ctx.strokeStyle = color;
+  ctx.lineWidth = width;
+  ctx.lineJoin = 'round';
+  ctx.lineCap = 'round';
+  ctx.stroke();
+
+  if (fill) {
+    const last = points[points.length - 1];
+    const first = points[0];
+    ctx.lineTo(last.x, ctx.canvas.height - 30);
+    ctx.lineTo(first.x, ctx.canvas.height - 30);
+    ctx.closePath();
+    const grad = ctx.createLinearGradient(0, 0, 0, ctx.canvas.height);
+    grad.addColorStop(0, color + '40');
+    grad.addColorStop(1, color + '05');
+    ctx.fillStyle = grad;
+    ctx.fill();
+  }
+}
+
+/* ── Revenue Line Chart ── */
+function RevenueChart({ data }) {
+  const canvasRef = useRef(null);
+
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas || !data || data.length === 0) return;
+    const ctx = canvas.getContext('2d');
+    const dpr = window.devicePixelRatio || 1;
+    const rect = canvas.getBoundingClientRect();
+    canvas.width = rect.width * dpr;
+    canvas.height = rect.height * dpr;
+    ctx.scale(dpr, dpr);
+    ctx.clearRect(0, 0, rect.width, rect.height);
+
+    const pad = { top: 20, right: 20, bottom: 35, left: 10 };
+    const w = rect.width - pad.left - pad.right;
+    const h = rect.height - pad.top - pad.bottom;
+    const max = Math.max(...data.map(d => d.revenue), 1);
+
+    const points = data.map((d, i) => ({
+      x: pad.left + (i / (data.length - 1 || 1)) * w,
+      y: pad.top + h - (d.revenue / max) * h,
+    }));
+
+    // Grid lines
+    ctx.strokeStyle = '#e5e7eb';
+    ctx.lineWidth = 0.5;
+    for (let i = 0; i <= 4; i++) {
+      const y = pad.top + (h / 4) * i;
+      ctx.beginPath();
+      ctx.moveTo(pad.left, y);
+      ctx.lineTo(pad.left + w, y);
+      ctx.stroke();
+    }
+
+    drawLine(ctx, points, '#10b981', 3, true);
+
+    // Dots
+    points.forEach(p => {
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, 4, 0, Math.PI * 2);
+      ctx.fillStyle = '#fff';
+      ctx.fill();
+      ctx.strokeStyle = '#10b981';
+      ctx.lineWidth = 2;
+      ctx.stroke();
+    });
+
+    // X labels
+    ctx.fillStyle = '#6b7280';
+    ctx.font = '11px Inter, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    data.forEach((d, i) => {
+      const x = pad.left + (i / (data.length - 1 || 1)) * w;
+      ctx.fillText(d.month, x, rect.height - 10);
+    });
+  }, [data]);
+
+  return <canvas ref={canvasRef} className={styles.chart} />;
+}
+
+/* ── Donut Chart ── */
+function DonutChart({ data }) {
+  const canvasRef = useRef(null);
+  const colors = ['#10b981', '#3b82f6', '#f59e0b', '#ef4444'];
+  const labels = ['Completed', 'Confirmed', 'In Progress', 'Pending'];
+
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    const dpr = window.devicePixelRatio || 1;
+    const rect = canvas.getBoundingClientRect();
+    canvas.width = rect.width * dpr;
+    canvas.height = rect.height * dpr;
+    ctx.scale(dpr, dpr);
+    ctx.clearRect(0, 0, rect.width, rect.height);
+
+    const values = [
+      data.completed || 0,
+      data.confirmed || 0,
+      data.in_progress || 0,
+      data.pending || 0,
+    ];
+    const total = values.reduce((a, b) => a + b, 0);
+    if (total === 0) return;
+
+    const cx = rect.width / 2 - 50;
+    const cy = rect.height / 2;
+    const outerR = Math.min(cx, cy) - 10;
+    const innerR = outerR * 0.6;
+
+    let startAngle = -Math.PI / 2;
+    values.forEach((val, i) => {
+      if (val === 0) return;
+      const slice = (val / total) * Math.PI * 2;
+      ctx.beginPath();
+      ctx.arc(cx, cy, outerR, startAngle, startAngle + slice);
+      ctx.arc(cx, cy, innerR, startAngle + slice, startAngle, true);
+      ctx.closePath();
+      ctx.fillStyle = colors[i];
+      ctx.fill();
+      startAngle += slice;
+    });
+
+    // Center text
+    ctx.fillStyle = '#1f2937';
+    ctx.font = 'bold 22px Inter, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(total, cx, cy - 6);
+    ctx.font = '11px Inter, system-ui, sans-serif';
+    ctx.fillStyle = '#6b7280';
+    ctx.fillText('Total', cx, cy + 14);
+
+    // Legend
+    const legendX = rect.width / 2 + 20;
+    let legendY = 20;
+    values.forEach((val, i) => {
+      if (val === 0) return;
+      ctx.fillStyle = colors[i];
+      ctx.beginPath();
+      ctx.roundRect(legendX, legendY, 10, 10, 2);
+      ctx.fill();
+      ctx.fillStyle = '#374151';
+      ctx.font = '12px Inter, system-ui, sans-serif';
+      ctx.textAlign = 'left';
+      ctx.fillText(`${labels[i]}: ${val}`, legendX + 16, legendY + 9);
+      legendY += 22;
+    });
+  }, [data]);
+
+  return <canvas ref={canvasRef} className={styles.chart} />;
+}
+
+/* ── Bar Chart for Crop Performance ── */
+function CropBarChart({ data }) {
+  const canvasRef = useRef(null);
+  const colors = ['#10b981', '#3b82f6', '#f59e0b', '#8b5cf6', '#ef4444', '#14b8a6'];
+
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas || !data || data.length === 0) return;
+    const ctx = canvas.getContext('2d');
+    const dpr = window.devicePixelRatio || 1;
+    const rect = canvas.getBoundingClientRect();
+    canvas.width = rect.width * dpr;
+    canvas.height = rect.height * dpr;
+    ctx.scale(dpr, dpr);
+    ctx.clearRect(0, 0, rect.width, rect.height);
+
+    const pad = { top: 15, right: 15, bottom: 40, left: 15 };
+    const w = rect.width - pad.left - pad.right;
+    const h = rect.height - pad.top - pad.bottom;
+    const maxRev = Math.max(...data.map(d => d.revenue), 1);
+    const barW = Math.min(50, (w / data.length) * 0.6);
+    const gap = w / data.length;
+
+    data.forEach((d, i) => {
+      const barH = (d.revenue / maxRev) * h;
+      const x = pad.left + gap * i + (gap - barW) / 2;
+      const y = pad.top + h - barH;
+      const col = colors[i % colors.length];
+
+      // Bar with rounded top
+      const radius = Math.min(6, barW / 2);
+      ctx.beginPath();
+      ctx.moveTo(x, y + radius);
+      ctx.arcTo(x, y, x + radius, y, radius);
+      ctx.arcTo(x + barW, y, x + barW, y + radius, radius);
+      ctx.lineTo(x + barW, pad.top + h);
+      ctx.lineTo(x, pad.top + h);
+      ctx.closePath();
+
+      const grad = ctx.createLinearGradient(x, y, x, pad.top + h);
+      grad.addColorStop(0, col);
+      grad.addColorStop(1, col + '60');
+      ctx.fillStyle = grad;
+      ctx.fill();
+
+      // Value on top
+      ctx.fillStyle = '#374151';
+      ctx.font = 'bold 11px Inter, system-ui, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText('₹' + (d.revenue / 1000).toFixed(d.revenue >= 1000 ? 1 : 0) + 'k', x + barW / 2, y - 6);
+
+      // Label
+      ctx.fillStyle = '#6b7280';
+      ctx.font = '11px Inter, system-ui, sans-serif';
+      ctx.fillText(d.crop, x + barW / 2, rect.height - 10);
+    });
+  }, [data]);
+
+  return <canvas ref={canvasRef} className={styles.chart} />;
+}
+
+/* ── Rating Stars ── */
+function RatingStars({ rating }) {
+  const full = Math.floor(rating);
+  const half = rating - full >= 0.5;
   return (
-    <div className={`${styles.widget} ${styles[theme]}`}>
-      <div className={styles.widgetHeader}>
-        <div className={styles.widgetIcon}>{icon}</div>
-        <h3 className={styles.widgetTitle}>{title}</h3>
-      </div>
-      <div className={styles.widgetContent}>{children}</div>
-      {insight && (
-        <div className={styles.insightBox}>
-          <span>{insightIcon || '💡'}</span>
-          <span>{insight}</span>
-        </div>
-      )}
-    </div>
+    <span className={styles.stars}>
+      {Array.from({ length: 5 }, (_, i) => (
+        <span key={i} style={{ color: i < full || (i === full && half) ? '#f59e0b' : '#d1d5db' }}>
+          {i < full ? '★' : i === full && half ? '★' : '☆'}
+        </span>
+      ))}
+      <span className={styles.ratingNum}>{rating}</span>
+    </span>
   );
 }
 
-export default function AnalyticsDashboard({ defaultRole = 'farmer' }) {
+/* ═════════════════════════════════════════════
+   MAIN DASHBOARD
+   ═════════════════════════════════════════════ */
+
+export default function AnalyticsDashboard() {
   const { user, loading } = useAuth();
   const router = useRouter();
-  const [fData, setFData] = useState(null);
-  const [bData, setBData] = useState(null);
+  const [data, setData] = useState(null);
+  const [error, setError] = useState(null);
+  const [fetching, setFetching] = useState(true);
 
-  // Force role based on user's actual role
-  const role = user?.role || defaultRole;
-
-  // Verify user is accessing their own role's analytics
   useEffect(() => {
-    if (!loading && user && user.role !== defaultRole) {
-      router.push(`/${user.role}/analytics`);
+    if (!loading && user && user.role !== 'farmer') {
+      router.push(`/${user.role}/dashboard`);
     }
-  }, [user, loading, defaultRole, router]);
-
-  // Profit Calc State
-  const [profitCost, setProfitCost] = useState(200000);
-  const [profitCrop, setProfitCrop] = useState('wheat');
-  const [profitQty, setProfitQty] = useState(200);
-  const [profitResult, setProfitResult] = useState(null);
+  }, [user, loading, router]);
 
   useEffect(() => {
     async function loadData() {
@@ -71,34 +294,56 @@ export default function AnalyticsDashboard({ defaultRole = 'farmer' }) {
         setBData({ comp, history, purchases, farmers, delivery, near });
       }
     }
-    loadData();
-  }, [role]);
+    fetchAnalytics();
+  }, [user]);
 
-  useEffect(() => {
-    if (role === 'farmer' && fData?.prices) {
-      farmerAPI.getProfitCalculator(profitCost, fData.prices.prices[profitCrop].current, profitQty)
-        .then(setProfitResult);
-    }
-  }, [profitCost, profitCrop, profitQty, fData, role]);
-
-  const loadingView = (
-    <div className={styles.grid}>
-      {[...Array(6)].map((_, i) => (
-        <div key={i} className={styles.widget} style={{ height: '250px', justifyContent: 'center', alignItems: 'center' }}>
-          <span style={{ fontSize: '2rem', animation: 'spin 1s linear infinite' }}>⏳</span>
+  if (loading || fetching || !user) {
+    return (
+      <div className={styles.container}>
+        <div className={styles.loadingGrid}>
+          {[...Array(6)].map((_, i) => (
+            <div key={i} className={styles.skeleton} />
+          ))}
         </div>
-      ))}
-    </div>
-  );
+      </div>
+    );
+  }
 
-  if (loading || !user) return loadingView;
+  if (error) {
+    return (
+      <div className={styles.container}>
+        <div className={styles.errorBox}>
+          <span>⚠️</span>
+          <p>{error}</p>
+          <button onClick={() => window.location.reload()}>Retry</button>
+        </div>
+      </div>
+    );
+  }
+
+  if (!data) return null;
+
+  const {
+    overview,
+    cropPerformance,
+    statusBreakdown,
+    revenueTrend,
+    listingsOverview,
+    paymentsOverview,
+    ratingsOverview,
+    topBuyers,
+    recentOrders,
+  } = data;
 
   return (
     <div className={styles.container}>
+      {/* ── Header ── */}
       <header className={styles.header}>
         <div>
-          <h1 className={styles.title}>📊 Intelligence Hub</h1>
-          <p className={styles.subtitle}>Actionable insights for {role === 'farmer' ? 'maximizing profits' : 'smart procurement'}.</p>
+          <h1 className={styles.title}>📊 Farm Analytics</h1>
+          <p className={styles.subtitle}>
+            Real-time insights from your farming business.
+          </p>
         </div>
       </header>
 
@@ -196,114 +441,133 @@ export default function AnalyticsDashboard({ defaultRole = 'farmer' }) {
               {fData.orders.orders.map(o => (
                 <div key={o.id} className={styles.statRow}>
                   <div>
-                    <span className={styles.statLabel}>{o.crop} ({o.quantity}q)</span>
-                    <div style={{ fontSize: '0.8rem', color: 'var(--bark)' }}>{o.status === 'Delivered' ? o.date : `Est: ${o.expectedDelivery}`}</div>
+                    <span className={styles.recentCrop}>{p.crop}</span>
+                    <span className={styles.recentBuyer}>by {p.buyer}</span>
                   </div>
-                  <span className={`${styles.badge} ${o.status === 'Delivered' ? styles.badgeHigh : styles.badgeMed}`}>
-                    {o.status}
-                  </span>
+                  <span className={styles.recentAmount}>₹{p.amount.toLocaleString()}</span>
                 </div>
               ))}
-            </Widget>
+            </div>
+          )}
+          {paymentsOverview.count === 0 && (
+            <div className={styles.emptyState}>
+              <span>💸</span>
+              <p>No payments received yet.</p>
+            </div>
+          )}
+        </div>
 
-            {/* 6. Crop Performance */}
-            <Widget title="Crop ROI Analysis" icon="🏆" theme="themePurple" insight="Wheat tops your ROI this season." insightIcon="🏆">
-              {fData.cropPerf.crops.map(c => (
-                <div key={c.crop} className={styles.statRow}>
-                  <div>
-                    <span className={styles.statLabel}>{c.crop}</span>
-                    <div style={{ fontSize: '0.8rem', color: 'var(--bark)' }}>{c.volume} units sold</div>
-                  </div>
-                  <div style={{ textAlign: 'right' }}>
-                    <div className={styles.statValue}>₹{c.profit.toLocaleString()}</div>
-                    <div className={styles.trendUp}>{c.roi}% ROI</div>
-                  </div>
-                </div>
-              ))}
-            </Widget>
-
-            {/* 7. Price Transparency */}
-            <Widget title="Market Match" icon="💎" theme="themeBlue" insight={fData.transp.recommendation} insightIcon={fData.transp.position === 'premium' ? "✅" : "⚠️"}>
-              <div className={styles.statRow}><span className={styles.statLabel}>Your Avg Price</span><span className={styles.statValue}>₹{fData.transp.yourPrice}</span></div>
-              <div className={styles.statRow}><span className={styles.statLabel}>Mandi Avg Price</span><span className={styles.statValue}>₹{fData.transp.marketPrice}</span></div>
-              <div className={styles.statRow}><span className={styles.statLabel}>Difference</span>
-                <span className={fData.transp.difference > 0 ? styles.trendUp : styles.trendDown}>
-                  {fData.transp.difference > 0 ? '+' : ''}{fData.transp.difference}%
-                </span>
+        {/* Ratings */}
+        <div className={styles.card}>
+          <div className={styles.cardHeader}>
+            <h3>⭐ Your Ratings</h3>
+          </div>
+          {ratingsOverview.total === 0 ? (
+            <div className={styles.emptyState}>
+              <span>⭐</span>
+              <p>No ratings yet. Complete orders to get buyer reviews!</p>
+            </div>
+          ) : (
+            <>
+              <div className={styles.ratingBig}>
+                <span className={styles.ratingBigNum}>{ratingsOverview.average}</span>
+                <RatingStars rating={ratingsOverview.average} />
+                <span className={styles.ratingCount}>{ratingsOverview.total} reviews</span>
               </div>
-            </Widget>
+              <div className={styles.ratingBars}>
+                {[5, 4, 3, 2, 1].map(star => {
+                  const count = ratingsOverview.distribution[star] || 0;
+                  const pct = ratingsOverview.total > 0 ? (count / ratingsOverview.total) * 100 : 0;
+                  return (
+                    <div key={star} className={styles.ratingBarRow}>
+                      <span className={styles.ratingBarLabel}>{star}★</span>
+                      <div className={styles.ratingBarTrack}>
+                        <div className={styles.ratingBarFill} style={{ width: `${pct}%` }} />
+                      </div>
+                      <span className={styles.ratingBarCount}>{count}</span>
+                    </div>
+                  );
+                })}
+              </div>
+            </>
+          )}
+        </div>
 
+        {/* Top Buyers */}
+        <div className={styles.card}>
+          <div className={styles.cardHeader}>
+            <h3>👥 Top Buyers</h3>
           </div>
-        )
-      ) : (
-        !bData ? loadingView : (
-          <div className={styles.grid}>
-            {/* 1. Price Comparison */}
-            <Widget title="Best Deals" icon="🔍" theme="themeEmerald" insight={`Farmer C is offering ₹${bData.comp.savings.cheapest} - the BEST DEAL!`} insightIcon="✅">
-              {bData.comp.comparison.map(c => (
-                <div key={c.farmer} className={styles.statRow}>
-                  <div>
-                    <span className={styles.statLabel}>{c.farmer} </span><span style={{ fontSize: '0.8rem' }}>⭐ {c.rating}</span>
-                    <div style={{ fontSize: '0.8rem', color: 'var(--bark)' }}>Delivers in: {c.delivery}</div>
+          {topBuyers.length === 0 ? (
+            <div className={styles.emptyState}>
+              <span>🤝</span>
+              <p>Complete orders to see your top buyers.</p>
+            </div>
+          ) : (
+            <div className={styles.buyerList}>
+              {topBuyers.map((b, i) => (
+                <div key={i} className={styles.buyerRow}>
+                  <div className={styles.buyerRank}>#{i + 1}</div>
+                  <div className={styles.buyerInfo}>
+                    <span className={styles.buyerName}>{b.name}</span>
+                    <span className={styles.buyerOrders}>{b.orders} orders</span>
                   </div>
-                  <span className={styles.statValue}>₹{c.price}/q</span>
+                  <span className={styles.buyerSpent}>₹{b.totalSpent.toLocaleString()}</span>
                 </div>
               ))}
-            </Widget>
+            </div>
+          )}
+        </div>
+      </div>
 
-            {/* 2. Price History */}
-            <Widget title="Price Forecast" icon="📉" theme="themePurple" insight={bData.history.recommendation} insightIcon={bData.history.trend === 'falling' ? "✅" : "⚠️"}>
-              {bData.history.priceHistory.map((h, i) => (
-                <div key={i} className={styles.statRow}>
-                  <span className={styles.statLabel}>{h.date}</span>
-                  <span className={styles.statValue}>₹{h.price}</span>
-                </div>
-              ))}
-            </Widget>
-
-            {/* 3. Purchase Analytics */}
-            <Widget title="Spend Analytics" icon="🛍️" theme="themeBlue" insight="Spending is up 40% this month." insightIcon="⚠️">
-              <div className={styles.statRow}><span className={styles.statLabel}>Total Orders</span><span className={styles.statValue}>{bData.purchases.purchases.totalOrders}</span></div>
-              <div className={styles.statRow}><span className={styles.statLabel}>Avg Order Value</span><span className={styles.statValue}>₹{bData.purchases.purchases.avgOrderValue.toLocaleString()}</span></div>
-              <div className={styles.statRow}><span className={styles.statLabel}>Total Spent</span><span className={styles.statValue}>₹{bData.purchases.purchases.totalSpending.toLocaleString()}</span></div>
-            </Widget>
-
-            {/* 4. Farmer Performance */}
-            <Widget title="Supplier Ratings" icon="⭐" theme="themeAmber" insight="Farmer X is highly trusted (4.8★)" insightIcon="✅">
-              {bData.farmers.farmers.map(f => (
-                <div key={f.farmer} className={styles.statRow}>
-                  <div>
-                    <span className={styles.statLabel}>{f.farmer}</span>
-                    <div style={{ fontSize: '0.8rem', color: 'var(--bark)' }}>Avg del: {f.deliveryTime}d • {f.reviews} reviews</div>
-                  </div>
-                  <span className={styles.statValue}>⭐ {f.rating}</span>
-                </div>
-              ))}
-            </Widget>
-
-            {/* 5. Delivery Analytics */}
-            <Widget title="Supply Chain" icon="📦" theme="themeTeal" insight="92% on-time delivery across network." insightIcon="🚚">
-              <div className={styles.statRow}><span className={styles.statLabel}>On-Time %</span><span className={styles.statValue}>{bData.delivery.delivery.onTimePercent}%</span></div>
-              <div className={styles.statRow}><span className={styles.statLabel}>Avg Duration</span><span className={styles.statValue}>{bData.delivery.delivery.avgDeliveryTime} days</span></div>
-              <div className={styles.statRow}><span className={styles.statLabel}>Reliability Score</span><span className={styles.statValue}>{(bData.delivery.delivery.reliabilityScore * 10).toFixed(1)}/10</span></div>
-            </Widget>
-
-            {/* 6. Location Based */}
-            <Widget title="Hyperlocal Sourcing" icon="📍" theme="themeRose" insight="Farmer A is closest (3 km)." insightIcon="🎯">
-              {bData.near.farmers.map(f => (
-                <div key={f.farmer} className={styles.statRow}>
-                  <div>
-                    <span className={styles.statLabel}>{f.farmer}</span>
-                    <div style={{ fontSize: '0.8rem', color: 'var(--bark)' }}>Distance: {f.distance}</div>
-                  </div>
-                  <span className={styles.statValue}>+₹{f.transportCost} delivery</span>
-                </div>
-              ))}
-            </Widget>
-
+      {/* ── Recent Orders Table ── */}
+      <div className={styles.card} style={{ marginTop: '1.5rem' }}>
+        <div className={styles.cardHeader}>
+          <h3>🕐 Recent Orders</h3>
+        </div>
+        {recentOrders.length === 0 ? (
+          <div className={styles.emptyState}>
+            <span>📋</span>
+            <p>No orders yet. List your produce to start receiving orders!</p>
           </div>
-        )
-      )}
+        ) : (
+          <div className={styles.tableWrapper}>
+            <table className={styles.table}>
+              <thead>
+                <tr>
+                  <th>Crop</th>
+                  <th>Buyer</th>
+                  <th>Qty</th>
+                  <th>Price</th>
+                  <th>Total</th>
+                  <th>Status</th>
+                  <th>Date</th>
+                </tr>
+              </thead>
+              <tbody>
+                {recentOrders.map((o, i) => (
+                  <tr key={i}>
+                    <td className={styles.cropCell}>
+                      {o.crop}
+                      {o.variety && <span className={styles.variety}>{o.variety}</span>}
+                    </td>
+                    <td>{o.buyer}</td>
+                    <td>{o.quantity} {o.unit}</td>
+                    <td>₹{o.agreedPrice.toLocaleString()}</td>
+                    <td className={styles.totalCell}>₹{o.totalAmount.toLocaleString()}</td>
+                    <td>
+                      <span className={`${styles.statusBadge} ${styles['status_' + o.status]}`}>
+                        {o.status.replace(/_/g, ' ')}
+                      </span>
+                    </td>
+                    <td className={styles.dateCell}>{new Date(o.date).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
     </div>
   );
 }
