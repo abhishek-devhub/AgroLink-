@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import dbConnect from '@/lib/mongodb';
-import Payment from '@/lib/models/Payment';
+import Order from '@/lib/models/Order';
 
 export async function GET(req) {
   try {
@@ -12,15 +12,34 @@ export async function GET(req) {
       return NextResponse.json({ success: false, error: 'farmerId is required' }, { status: 400 });
     }
 
-    const payments = await Payment.find({ farmerId })
-      .sort({ paidAt: -1 })
+    // Fetch all orders for this farmer
+    const orders = await Order.find({ farmerId })
+      .sort({ updatedAt: -1 })
       .lean();
+
+    // Map orders to the payment format expected by the frontend
+    const payments = orders
+      .filter(o => o.paymentStatus === 'paid' || o.paymentStatus === 'pending')
+      .map(o => ({
+        _id: o._id,
+        paidAt: o.payment?.paidAt || o.updatedAt,
+        orderId: o._id,
+        buyerName: o.buyerName,
+        crop: o.crop,
+        quantity: o.quantity,
+        unit: o.unit,
+        amount: o.totalAmount || o.payment?.amount || 0,
+        method: o.payment?.method || null,
+        status: o.paymentStatus
+      }));
 
     const totalReceived = payments
       .filter(p => p.status === 'paid')
       .reduce((sum, p) => sum + p.amount, 0);
 
-    const pendingAmount = 0; // Reserved for future escrow logic
+    const pendingAmount = payments
+      .filter(p => p.status === 'pending')
+      .reduce((sum, p) => sum + p.amount, 0);
 
     return NextResponse.json({
       success: true,

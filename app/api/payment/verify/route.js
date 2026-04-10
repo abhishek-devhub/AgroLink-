@@ -54,24 +54,7 @@ export async function POST(req) {
     // Step 4: Mark listing as sold
     await Listing.findByIdAndUpdate(order.listingId, { status: 'sold' });
 
-    // Step 5: Create Payment record for farmer's earnings page
-    await Payment.create({
-      orderId:           order._id,
-      farmerId:          order.farmerId.toString(),
-      buyerId:           order.buyerId.toString(),
-      buyerName:         order.buyerName,
-      crop:              order.crop,
-      quantity:          order.quantity,
-      unit:              order.unit,
-      amount:            order.totalAmount,
-      currency:          'INR',
-      razorpayOrderId,
-      razorpayPaymentId,
-      razorpaySignature,
-      status:            'paid',
-      method:            paymentMethod || null,
-      paidAt:            new Date(),
-    });
+    // Step 5: (Removed) Payments are now tracked directly via the Order collection
 
     // Step 6: Fire activity events for buyer and farmer
     const formattedAmount = new Intl.NumberFormat('en-IN', {
