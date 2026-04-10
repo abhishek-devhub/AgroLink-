@@ -12,6 +12,7 @@ export default function FarmerTrackOrder() {
   const [order, setOrder] = useState(null);
   const [copied, setCopied] = useState(false);
   const [poolFarmers, setPoolFarmers] = useState(3);
+  const [poolFarmers, setPoolFarmers] = useState(3);
 
   useEffect(() => {
     if (!loading && (!user || user.role !== 'farmer')) router.push('/login');

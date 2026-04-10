@@ -20,7 +20,6 @@ const buyerLinks = [
   { href: '/buyer/browse', label: 'Browse Produce' },
   { href: '/buyer/market-prices', label: 'Market Prices' },
   { href: '/buyer/orders', label: 'Orders' },
-  { href: '/buyer/analytics', label: 'Analytics' },
 ];
 
 export default function Navbar() {
