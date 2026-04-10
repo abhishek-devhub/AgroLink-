@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { useAuth } from '@/lib/auth-context';
 import SupplyChainTracker from '@/components/SupplyChainTracker/SupplyChainTracker';
+import { QRCodeSVG } from 'qrcode.react';
 
 export default function BuyerTrackOrder() {
   const { user, loading } = useAuth();
@@ -58,7 +59,7 @@ export default function BuyerTrackOrder() {
         />
 
         <div style={{ marginTop: '1.5rem', display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(280px,1fr))', gap: '1rem' }}>
-          <div style={{ border: '1px solid #e9ecef', borderRadius: '12px', padding: '1rem' }}>
+          <div style={{ border: '1px solid #e9ecef', borderRadius: '12px', padding: '1rem', background: 'linear-gradient(160deg, #ffffff 0%, #f8fff6 100%)' }}>
             <h3 style={{ marginTop: 0, color: 'var(--soil)', fontSize: '1rem' }}>💹 Fair Price AI</h3>
             <p style={{ margin: '0 0 0.5rem 0', color: 'var(--bark)', fontSize: '0.85rem' }}>
               Based on mandi benchmark ({order.fairPricing?.mandiMarket}).
@@ -68,11 +69,9 @@ export default function BuyerTrackOrder() {
             <p style={{ margin: '0.3rem 0', fontSize: '0.9rem' }}>Deal score: <strong>{order.fairPricing?.dealScore}/100</strong> ({order.fairPricing?.verdict})</p>
           </div>
 
-          <div style={{ border: '1px solid #e9ecef', borderRadius: '12px', padding: '1rem' }}>
+          <div style={{ border: '1px solid #e9ecef', borderRadius: '12px', padding: '1rem', background: 'linear-gradient(160deg, #ffffff 0%, #f4f9ff 100%)' }}>
             <h3 style={{ marginTop: 0, color: 'var(--soil)', fontSize: '1rem' }}>📱 QR Traceability</h3>
-            {order.traceability?.qrImageUrl && (
-              <img src={order.traceability.qrImageUrl} alt="Traceability QR" width={120} height={120} />
-            )}
+            {order.traceability?.traceLink && <QRCodeSVG value={order.traceability.traceLink} size={120} includeMargin />}
             <div style={{ marginTop: '0.6rem', display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
               <a href={order.traceability?.traceLink} target="_blank" rel="noopener noreferrer" className="btn-secondary" style={{ fontSize: '0.8rem' }}>
                 Open public trace
@@ -80,6 +79,26 @@ export default function BuyerTrackOrder() {
               <button className="btn-secondary" style={{ fontSize: '0.8rem' }} onClick={handleCopyTraceLink}>
                 {copied ? 'Copied!' : 'Copy link'}
               </button>
+            </div>
+          </div>
+
+          <div style={{ border: '1px solid #e9ecef', borderRadius: '12px', padding: '1rem', background: 'linear-gradient(160deg, #ffffff 0%, #fffaf3 100%)' }}>
+            <h3 style={{ marginTop: 0, color: 'var(--soil)', fontSize: '1rem' }}>🛡️ Farmer Trust Profile</h3>
+            <p style={{ margin: '0.2rem 0', fontSize: '1.4rem', color: 'var(--leaf)', fontWeight: 700 }}>
+              {order.trustProfile?.score || 0}/100
+            </p>
+            <p style={{ margin: '0.2rem 0 0.6rem 0', fontSize: '0.85rem', color: 'var(--bark)' }}>
+              Composite score from quality grade, fulfillment progress and delivery reliability.
+            </p>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.35rem' }}>
+              {(order.trustProfile?.badges || []).map((badge) => (
+                <span
+                  key={badge}
+                  style={{ background: 'rgba(212, 140, 45, 0.15)', color: 'var(--soil)', padding: '0.2rem 0.5rem', borderRadius: '999px', fontSize: '0.75rem', fontWeight: 600 }}
+                >
+                  {badge}
+                </span>
+              ))}
             </div>
           </div>
         </div>

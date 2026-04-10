@@ -55,7 +55,10 @@ export default function ListProduce() {
     recognition.onresult = (event) => {
       const transcript = event.results?.[0]?.[0]?.transcript || '';
       if (!transcript) return;
-      update('description', form.description ? `${form.description} ${transcript}` : transcript);
+      setForm((prev) => ({
+        ...prev,
+        description: prev.description ? `${prev.description} ${transcript}` : transcript,
+      }));
     };
     recognition.onend = () => setIsListening(false);
     recognition.onerror = () => setIsListening(false);
