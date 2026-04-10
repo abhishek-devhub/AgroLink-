@@ -10,6 +10,12 @@ export default function SkillsHub() {
   const [courses, setCourses] = useState([]);
   const [modal, setModal] = useState(null);
 
+  const skillTracks = [
+    { role: 'Quality Inspector', coursesNeeded: 1, estWage: '₹600/day', openings: 12 },
+    { role: 'Cold Storage Operator', coursesNeeded: 2, estWage: '₹700/day', openings: 8 },
+    { role: 'Agri Logistics Coordinator', coursesNeeded: 2, estWage: '₹850/day', openings: 5 },
+  ];
+
   useEffect(() => {
     if (!loading && (!user || user.role !== 'farmer')) router.push('/login');
   }, [user, loading, router]);
@@ -29,8 +35,10 @@ export default function SkillsHub() {
     });
     
     // Optimistic update
-    setCourses(courses.map(c => 
-      c._id === modal.id ? { ...c, enrollments: [...c.enrollments, user.id] } : c
+    setCourses((prev) => prev.map((c) =>
+      c._id === modal.id && !c.enrollments.includes(user.id)
+        ? { ...c, enrollments: [...c.enrollments, user.id] }
+        : c
     ));
     setModal({ ...modal, success: true });
   };
@@ -39,12 +47,33 @@ export default function SkillsHub() {
 
   const training = courses.filter(c => c.type === 'course');
   const jobs = courses.filter(c => c.type === 'job');
+  const completedTracks = training.filter(c => c.enrollments.includes(user.id)).length;
+  const readiness = Math.min(100, completedTracks * 35 + 20);
 
   return (
     <div className="page-container">
       <div className="card" style={{ background: 'var(--soil)', color: 'var(--cream)', marginBottom: '2rem', padding: '2.5rem' }}>
         <h1 style={{ fontSize: '2rem', marginBottom: '0.5rem', color: 'var(--harvest)' }}>Skills & Opportunity Hub</h1>
         <p style={{ fontSize: '1.05rem', opacity: 0.9 }}>Upgrade your farming methods or find off-season employment. Learn, earn, and grow.</p>
+      </div>
+
+      <div className="card" style={{ marginBottom: '2rem' }}>
+        <h2 style={{ fontSize: '1.2rem', color: 'var(--soil)', marginBottom: '0.5rem' }}>🚀 Skill-to-Earnings Pathway</h2>
+        <p style={{ color: 'var(--bark)', fontSize: '0.92rem' }}>
+          Opportunity readiness: <strong>{readiness}%</strong> based on your completed upskilling tracks.
+        </p>
+        <div className="grid-3" style={{ marginTop: '1rem' }}>
+          {skillTracks.map(track => (
+            <div key={track.role} style={{ border: '1px solid #eee', borderRadius: '10px', padding: '0.9rem' }}>
+              <p style={{ margin: 0, fontWeight: 700, color: 'var(--soil)' }}>{track.role}</p>
+              <p style={{ margin: '0.45rem 0', color: 'var(--bark)', fontSize: '0.85rem' }}>
+                {track.coursesNeeded} course{track.coursesNeeded > 1 ? 's' : ''} needed
+              </p>
+              <p style={{ margin: 0, color: 'var(--leaf)', fontSize: '0.85rem' }}>Potential earning: {track.estWage}</p>
+              <p style={{ margin: '0.2rem 0 0 0', color: 'var(--bark)', fontSize: '0.8rem' }}>{track.openings} nearby openings</p>
+            </div>
+          ))}
+        </div>
       </div>
 
       <h2 style={{ fontSize: '1.4rem', color: 'var(--soil)', marginBottom: '1.25rem' }}>🎓 Training & Certification</h2>
