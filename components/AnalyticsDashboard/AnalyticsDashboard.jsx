@@ -49,15 +49,16 @@ export default function AnalyticsDashboard({ defaultRole = 'farmer' }) {
   useEffect(() => {
     async function loadData() {
       if (role === 'farmer') {
-        const [prices, demand, sales, orders, cropPerf, transp] = await Promise.all([
+        const [prices, demand, sales, orders, cropPerf, transp, forecast] = await Promise.all([
           farmerAPI.getPriceTrends(),
           farmerAPI.getDemand(),
           farmerAPI.getSalesPerformance(),
           farmerAPI.getOrdersTracking(),
           farmerAPI.getCropPerformance(),
-          farmerAPI.getPriceTransparency()
+          farmerAPI.getPriceTransparency(),
+          farmerAPI.getDemandForecast()
         ]);
-        setFData({ prices, demand, sales, orders, cropPerf, transp });
+        setFData({ prices, demand, sales, orders, cropPerf, transp, forecast });
       } else {
         const [comp, history, purchases, farmers, delivery, near] = await Promise.all([
           buyerAPI.getPriceComparison(),
@@ -170,6 +171,24 @@ export default function AnalyticsDashboard({ defaultRole = 'farmer' }) {
               <div className={styles.statRow}><span className={styles.statLabel}>Total Sales</span><span className={styles.statValue}>{fData.sales.sales.totalSales.toLocaleString()} kg</span></div>
               <div className={styles.statRow}><span className={styles.statLabel}>Revenue</span><span className={styles.statValue}>₹{fData.sales.sales.revenue.toLocaleString()}</span></div>
               <div className={styles.statRow}><span className={styles.statLabel}>Orders</span><span className={styles.statValue}>{fData.sales.sales.ordersCompleted}</span></div>
+            </Widget>
+
+            {/* 4b. Demand Forecast */}
+            <Widget title="Demand Forecast (2-4 Weeks)" icon="🔮" theme="themeTeal" insight="Use this board for crop planning before listing." insightIcon="📌">
+              {fData.forecast.forecasts.map(item => (
+                <div key={item.crop} className={styles.statRow}>
+                  <div>
+                    <span className={styles.statLabel}>{item.crop}</span>
+                    <div style={{ fontSize: '0.75rem', color: 'var(--bark)' }}>{item.driver}</div>
+                  </div>
+                  <div style={{ textAlign: 'right' }}>
+                    <div className={styles.statValue}>₹{item.expectedPrice}/q</div>
+                    <div style={{ fontSize: '0.75rem', color: 'var(--bark)' }}>
+                      {item.expectedDemand} • {Math.round(item.confidence * 100)}%
+                    </div>
+                  </div>
+                </div>
+              ))}
             </Widget>
 
             {/* 5. Supply Chain */}
