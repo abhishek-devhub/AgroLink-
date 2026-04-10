@@ -10,6 +10,7 @@ export default function BuyerTrackOrder() {
   const router = useRouter();
   const params = useParams();
   const [order, setOrder] = useState(null);
+  const [copied, setCopied] = useState(false);
 
   useEffect(() => {
     if (!loading && (!user || user.role !== 'buyer')) router.push('/login');
@@ -21,6 +22,15 @@ export default function BuyerTrackOrder() {
   }, [user, params.orderId]);
 
   if (loading || !user || !order) return null;
+
+  const handleCopyTraceLink = async () => {
+    if (!order?.traceability?.traceLink) return;
+    try {
+      await navigator.clipboard.writeText(order.traceability.traceLink);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1500);
+    } catch {}
+  };
 
   return (
     <div className="page-container">
@@ -46,6 +56,33 @@ export default function BuyerTrackOrder() {
           steps={order.supplyChainSteps} 
           readOnly={true} // Buyer only views tracking, farmer/logistics updates it
         />
+
+        <div style={{ marginTop: '1.5rem', display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(280px,1fr))', gap: '1rem' }}>
+          <div style={{ border: '1px solid #e9ecef', borderRadius: '12px', padding: '1rem' }}>
+            <h3 style={{ marginTop: 0, color: 'var(--soil)', fontSize: '1rem' }}>💹 Fair Price AI</h3>
+            <p style={{ margin: '0 0 0.5rem 0', color: 'var(--bark)', fontSize: '0.85rem' }}>
+              Based on mandi benchmark ({order.fairPricing?.mandiMarket}).
+            </p>
+            <p style={{ margin: '0.3rem 0', fontSize: '0.9rem' }}>Recommended: <strong>₹{order.fairPricing?.recommended}/q</strong></p>
+            <p style={{ margin: '0.3rem 0', fontSize: '0.9rem' }}>Fair range: ₹{order.fairPricing?.fairRange?.min} - ₹{order.fairPricing?.fairRange?.max}/q</p>
+            <p style={{ margin: '0.3rem 0', fontSize: '0.9rem' }}>Deal score: <strong>{order.fairPricing?.dealScore}/100</strong> ({order.fairPricing?.verdict})</p>
+          </div>
+
+          <div style={{ border: '1px solid #e9ecef', borderRadius: '12px', padding: '1rem' }}>
+            <h3 style={{ marginTop: 0, color: 'var(--soil)', fontSize: '1rem' }}>📱 QR Traceability</h3>
+            {order.traceability?.qrImageUrl && (
+              <img src={order.traceability.qrImageUrl} alt="Traceability QR" width={120} height={120} />
+            )}
+            <div style={{ marginTop: '0.6rem', display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+              <a href={order.traceability?.traceLink} target="_blank" rel="noopener noreferrer" className="btn-secondary" style={{ fontSize: '0.8rem' }}>
+                Open public trace
+              </a>
+              <button className="btn-secondary" style={{ fontSize: '0.8rem' }} onClick={handleCopyTraceLink}>
+                {copied ? 'Copied!' : 'Copy link'}
+              </button>
+            </div>
+          </div>
+        </div>
 
         {order.supplyChainSteps[4].status === 'complete' && order.paymentStatus === 'pending' && (
           <div style={{ marginTop: '2.5rem', textAlign: 'center', background: 'rgba(212, 140, 45, 0.1)', padding: '1.5rem', borderRadius: '12px', border: '1px dashed var(--harvest)' }}>

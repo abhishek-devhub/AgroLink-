@@ -2,13 +2,26 @@ import { NextResponse } from 'next/server';
 import dbConnect from '@/lib/mongodb';
 import Order from '@/lib/models/Order';
 import { addActivity } from '@/lib/activityServer';
+import { getFairPricingInsight } from '@/lib/fairPricing';
 
 export async function GET(request, { params }) {
   try {
     await dbConnect();
     const order = await Order.findById(params.id);
     if (!order) return NextResponse.json({ error: 'Order not found' }, { status: 404 });
-    return NextResponse.json(order);
+    const origin = new URL(request.url).origin;
+    const traceLink = `${origin}/trace/${order._id}`;
+    const qrImageUrl = `https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(traceLink)}`;
+    const fairPricing = getFairPricingInsight(order);
+
+    return NextResponse.json({
+      ...order.toObject(),
+      traceability: {
+        traceLink,
+        qrImageUrl,
+      },
+      fairPricing,
+    });
   } catch (err) {
     return NextResponse.json({ error: err.message }, { status: 500 });
   }
