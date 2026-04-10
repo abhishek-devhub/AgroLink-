@@ -270,28 +270,19 @@ export default function AnalyticsDashboard() {
   }, [user, loading, router]);
 
   useEffect(() => {
-    async function loadData() {
-      if (role === 'farmer') {
-        const [prices, demand, sales, orders, cropPerf, transp, forecast] = await Promise.all([
-          farmerAPI.getPriceTrends(),
-          farmerAPI.getDemand(),
-          farmerAPI.getSalesPerformance(),
-          farmerAPI.getOrdersTracking(),
-          farmerAPI.getCropPerformance(),
-          farmerAPI.getPriceTransparency(),
-          farmerAPI.getDemandForecast()
-        ]);
-        setFData({ prices, demand, sales, orders, cropPerf, transp, forecast });
-      } else {
-        const [comp, history, purchases, farmers, delivery, near] = await Promise.all([
-          buyerAPI.getPriceComparison(),
-          buyerAPI.getPriceHistory(),
-          buyerAPI.getPurchaseAnalytics(),
-          buyerAPI.getFarmerPerformance(),
-          buyerAPI.getDeliveryAnalytics(),
-          buyerAPI.getNearbyFarmers()
-        ]);
-        setBData({ comp, history, purchases, farmers, delivery, near });
+    if (!user || user.role !== 'farmer') return;
+
+    async function fetchAnalytics() {
+      try {
+        setFetching(true);
+        const res = await fetch(`/api/analytics/farmer?farmerId=${user.id}`);
+        if (!res.ok) throw new Error('Failed to load analytics');
+        const json = await res.json();
+        setData(json);
+      } catch (e) {
+        setError(e.message);
+      } finally {
+        setFetching(false);
       }
     }
     fetchAnalytics();
@@ -347,99 +338,142 @@ export default function AnalyticsDashboard() {
         </div>
       </header>
 
-      {role === 'farmer' ? (
-        !fData ? loadingView : (
-          <div className={styles.grid}>
-            {/* 1. Price Trends */}
-            <Widget title="Price Trends" icon="📈" theme="themeEmerald" insight="Wheat price ↑ 8% this week → Good time to sell!" insightIcon="✅">
-              {Object.entries(fData.prices.prices).map(([crop, data]) => (
-                <div key={crop} className={styles.statRow}>
-                  <span className={styles.statLabel} style={{ textTransform: 'capitalize' }}>{crop}</span>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                    <span className={styles.statValue}>₹{data.current}/q</span>
-                    {data.change > 0
-                      ? <span className={styles.trendUp}>↑ {data.change}%</span>
-                      : <span className={styles.trendDown}>↓ {Math.abs(data.change)}%</span>
-                    }
-                  </div>
-                </div>
-              ))}
-            </Widget>
+      {/* ── KPI Cards ── */}
+      <div className={styles.kpiRow}>
+        <div className={`${styles.kpiCard} ${styles.kpiEmerald}`}>
+          <div className={styles.kpiIcon}>💰</div>
+          <div className={styles.kpiBody}>
+            <span className={styles.kpiLabel}>Total Revenue</span>
+            <span className={styles.kpiValue}>₹{overview.totalRevenue.toLocaleString()}</span>
+          </div>
+        </div>
+        <div className={`${styles.kpiCard} ${styles.kpiBlue}`}>
+          <div className={styles.kpiIcon}>📦</div>
+          <div className={styles.kpiBody}>
+            <span className={styles.kpiLabel}>Total Orders</span>
+            <span className={styles.kpiValue}>{overview.totalOrders}</span>
+          </div>
+        </div>
+        <div className={`${styles.kpiCard} ${styles.kpiAmber}`}>
+          <div className={styles.kpiIcon}>✅</div>
+          <div className={styles.kpiBody}>
+            <span className={styles.kpiLabel}>Success Rate</span>
+            <span className={styles.kpiValue}>{overview.successRate}%</span>
+          </div>
+        </div>
+        <div className={`${styles.kpiCard} ${styles.kpiPurple}`}>
+          <div className={styles.kpiIcon}>📈</div>
+          <div className={styles.kpiBody}>
+            <span className={styles.kpiLabel}>Avg Order Value</span>
+            <span className={styles.kpiValue}>₹{overview.avgOrderValue.toLocaleString()}</span>
+          </div>
+        </div>
+      </div>
 
-            {/* 2. Profit Calculator */}
-            <Widget title="Profit Calculator" icon="💰" theme="themeBlue" insight={profitResult && profitResult.profitMargin > 40 ? "Excellent ROI!" : "Lower risk crop but less profitable."} insightIcon={profitResult && profitResult.profitMargin > 40 ? "✅" : "⚠️"}>
-              <div style={{ display: 'flex', gap: '0.5rem' }}>
-                <div className={styles.inputGroup} style={{ flex: 1 }}>
-                  <label className={styles.statLabel}>Crop</label>
-                  <select className={styles.statValue} style={{ padding: '4px', borderRadius: '4px' }} value={profitCrop} onChange={e => setProfitCrop(e.target.value)}>
-                    <option value="wheat">Wheat</option>
-                    <option value="tomato">Tomato</option>
-                    <option value="rice">Rice</option>
-                  </select>
-                </div>
-                <div className={styles.inputGroup} style={{ flex: 1 }}>
-                  <label className={styles.statLabel}>Cost (₹)</label>
-                  <input type="number" value={profitCost} onChange={e => setProfitCost(Number(e.target.value))} />
-                </div>
-              </div>
-              {profitResult && (
-                <>
-                  <div className={styles.statRow}>
-                    <span className={styles.statLabel}>Net Profit</span>
-                    <span className={styles.statValue} style={{ color: 'var(--leaf)' }}>₹{profitResult.netProfit.toLocaleString()}</span>
-                  </div>
-                  <div className={styles.statRow}>
-                    <span className={styles.statLabel}>Profit Margin</span>
-                    <span className={styles.statValue}>{profitResult.profitMargin}%</span>
-                  </div>
-                </>
-              )}
-            </Widget>
+      {/* ── Charts Row ── */}
+      <div className={styles.grid2}>
+        {/* Revenue Trend */}
+        <div className={styles.card}>
+          <div className={styles.cardHeader}>
+            <h3>📈 Revenue Trend</h3>
+            <span className={styles.cardBadge}>Last 6 months</span>
+          </div>
+          {revenueTrend.every(r => r.revenue === 0) ? (
+            <div className={styles.emptyState}>
+              <span>📊</span>
+              <p>No revenue data yet. Complete orders to see your trend!</p>
+            </div>
+          ) : (
+            <RevenueChart data={revenueTrend} />
+          )}
+        </div>
 
-            {/* 3. Demand Analytics */}
-            <Widget title="Market Demand" icon="🔔" theme="themeRose" insight="Tomato demand is spiking locally." insightIcon="📈">
-              {fData.demand.demand.map(d => (
-                <div key={d.crop} className={styles.statRow}>
-                  <div>
-                    <span className={styles.statLabel}>{d.crop}</span>
-                    <div style={{ fontSize: '0.8rem', color: 'var(--bark)' }}>{d.requests} requests</div>
-                  </div>
-                  <span className={`${styles.badge} ${d.demandLevel === 'High' ? styles.badgeHigh : d.demandLevel === 'Medium' ? styles.badgeMed : styles.badgeLow}`}>
-                    {d.demandLevel}
-                  </span>
-                </div>
-              ))}
-            </Widget>
+        {/* Order Status Donut */}
+        <div className={styles.card}>
+          <div className={styles.cardHeader}>
+            <h3>🎯 Order Status</h3>
+            <span className={styles.cardBadge}>All time</span>
+          </div>
+          {overview.totalOrders === 0 ? (
+            <div className={styles.emptyState}>
+              <span>📦</span>
+              <p>No orders yet. Your first order will show up here!</p>
+            </div>
+          ) : (
+            <DonutChart data={statusBreakdown} />
+          )}
+        </div>
+      </div>
 
-            {/* 4. Sales Metrics */}
-            <Widget title="Sales Performance" icon="📊" theme="themeAmber" insight={`${fData.sales.sales.ordersCompleted} orders → ${(fData.sales.sales.successRate * 100).toFixed(0)}% success rate!`} insightIcon="✅">
-              <div className={styles.statRow}><span className={styles.statLabel}>Total Sales</span><span className={styles.statValue}>{fData.sales.sales.totalSales.toLocaleString()} kg</span></div>
-              <div className={styles.statRow}><span className={styles.statLabel}>Revenue</span><span className={styles.statValue}>₹{fData.sales.sales.revenue.toLocaleString()}</span></div>
-              <div className={styles.statRow}><span className={styles.statLabel}>Orders</span><span className={styles.statValue}>{fData.sales.sales.ordersCompleted}</span></div>
-            </Widget>
+      {/* ── Second Row ── */}
+      <div className={styles.grid2}>
+        {/* Crop Performance */}
+        <div className={styles.card}>
+          <div className={styles.cardHeader}>
+            <h3>🌾 Crop Performance</h3>
+            <span className={styles.cardBadge}>Revenue by crop</span>
+          </div>
+          {cropPerformance.length === 0 ? (
+            <div className={styles.emptyState}>
+              <span>🌱</span>
+              <p>Complete orders to see crop-wise performance.</p>
+            </div>
+          ) : (
+            <CropBarChart data={cropPerformance} />
+          )}
+        </div>
 
-            {/* 4b. Demand Forecast */}
-            <Widget title="Demand Forecast (2-4 Weeks)" icon="🔮" theme="themeTeal" insight="Use this board for crop planning before listing." insightIcon="📌">
-              {fData.forecast.forecasts.map(item => (
-                <div key={item.crop} className={styles.statRow}>
-                  <div>
-                    <span className={styles.statLabel}>{item.crop}</span>
-                    <div style={{ fontSize: '0.75rem', color: 'var(--bark)' }}>{item.driver}</div>
-                  </div>
-                  <div style={{ textAlign: 'right' }}>
-                    <div className={styles.statValue}>₹{item.expectedPrice}/q</div>
-                    <div style={{ fontSize: '0.75rem', color: 'var(--bark)' }}>
-                      {item.expectedDemand} • {Math.round(item.confidence * 100)}%
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </Widget>
+        {/* Listings */}
+        <div className={styles.card}>
+          <div className={styles.cardHeader}>
+            <h3>📋 Listings Overview</h3>
+          </div>
+          <div className={styles.statsGrid}>
+            <div className={styles.statTile}>
+              <span className={styles.statTileValue}>{listingsOverview.total}</span>
+              <span className={styles.statTileLabel}>Total Listings</span>
+            </div>
+            <div className={styles.statTile}>
+              <span className={styles.statTileValue} style={{ color: '#10b981' }}>{listingsOverview.active}</span>
+              <span className={styles.statTileLabel}>Active</span>
+            </div>
+            <div className={styles.statTile}>
+              <span className={styles.statTileValue} style={{ color: '#3b82f6' }}>{listingsOverview.sold}</span>
+              <span className={styles.statTileLabel}>Sold</span>
+            </div>
+            <div className={styles.statTile}>
+              <span className={styles.statTileValue} style={{ color: '#f59e0b' }}>{listingsOverview.totalBidsReceived}</span>
+              <span className={styles.statTileLabel}>Bids Received</span>
+            </div>
+          </div>
+          {listingsOverview.avgPrice > 0 && (
+            <div className={styles.insightBox}>
+              <span>💡</span>
+              <span>Avg listing price: ₹{listingsOverview.avgPrice.toLocaleString()}/{listingsOverview.total > 0 ? 'unit' : ''}</span>
+            </div>
+          )}
+        </div>
+      </div>
 
-            {/* 5. Supply Chain */}
-            <Widget title="Logistics" icon="🚚" theme="themeTeal" insight={`Avg delivery: ${fData.orders.avgDelivery} days → Fast & reliable!`} insightIcon="✅">
-              {fData.orders.orders.map(o => (
-                <div key={o.id} className={styles.statRow}>
+      {/* ── Third Row ── */}
+      <div className={styles.grid3}>
+        {/* Payments */}
+        <div className={styles.card}>
+          <div className={styles.cardHeader}>
+            <h3>💳 Payments</h3>
+          </div>
+          <div className={styles.paymentSummary}>
+            <div className={styles.payBig}>
+              <span className={styles.payAmount}>₹{paymentsOverview.totalReceived.toLocaleString()}</span>
+              <span className={styles.payLabel}>Total Received</span>
+            </div>
+            <span className={styles.payCount}>{paymentsOverview.count} payments</span>
+          </div>
+          {paymentsOverview.recentPayments.length > 0 && (
+            <div className={styles.recentList}>
+              <h4 className={styles.recentTitle}>Recent</h4>
+              {paymentsOverview.recentPayments.map((p, i) => (
+                <div key={i} className={styles.recentItem}>
                   <div>
                     <span className={styles.recentCrop}>{p.crop}</span>
                     <span className={styles.recentBuyer}>by {p.buyer}</span>
