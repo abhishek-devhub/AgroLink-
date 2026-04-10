@@ -15,22 +15,51 @@ export default function ListProduce() {
     harvestDate: '', grade: 'A', description: '', price: '',
   });
   const [photos, setPhotos] = useState([]);
+  const [speechSupported, setSpeechSupported] = useState(false);
+  const [isListening, setIsListening] = useState(false);
 
   useEffect(() => {
     if (!loading && (!user || user.role !== 'farmer')) router.push('/login');
   }, [user, loading, router]);
 
+  useEffect(() => {
+    setSpeechSupported(typeof window !== 'undefined' && ('SpeechRecognition' in window || 'webkitSpeechRecognition' in window));
+  }, []);
+
   const update = (f, v) => setForm(p => ({ ...p, [f]: v }));
 
   const mandiRate = MANDI_PRICES.find(m => m.crop.includes(form.crop));
 
-  const handlePhoto = (e) => {
-    const files = Array.from(e.target.files).slice(0, 3);
-    files.forEach(file => {
-      const reader = new FileReader();
-      reader.onloadend = () => setPhotos(p => [...p.slice(0, 2), reader.result]);
-      reader.readAsDataURL(file);
-    });
+  const handlePhoto = async (e) => {
+    const files = Array.from(e.target.files || []).slice(0, 3);
+    const readAsDataUrl = (file) =>
+      new Promise((resolve) => {
+        const reader = new FileReader();
+        reader.onloadend = () => resolve(reader.result);
+        reader.readAsDataURL(file);
+      });
+
+    const photoData = await Promise.all(files.map(readAsDataUrl));
+    setPhotos(photoData.filter(Boolean).slice(0, 3));
+  };
+
+  const startVoiceInput = () => {
+    const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SR) return;
+    const recognition = new SR();
+    recognition.lang = 'en-IN';
+    recognition.interimResults = false;
+    recognition.maxAlternatives = 1;
+    setIsListening(true);
+
+    recognition.onresult = (event) => {
+      const transcript = event.results?.[0]?.[0]?.transcript || '';
+      if (!transcript) return;
+      update('description', form.description ? `${form.description} ${transcript}` : transcript);
+    };
+    recognition.onend = () => setIsListening(false);
+    recognition.onerror = () => setIsListening(false);
+    recognition.start();
   };
 
   const handleSubmit = async (e) => {
@@ -109,7 +138,20 @@ export default function ListProduce() {
         </div>
 
         <div className="form-group">
-          <label>Description</label>
+          <label style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            Description
+            {speechSupported && (
+              <button
+                type="button"
+                className="btn-secondary"
+                onClick={startVoiceInput}
+                disabled={isListening}
+                style={{ fontSize: '0.75rem', padding: '0.3rem 0.6rem' }}
+              >
+                {isListening ? '🎙️ Listening...' : '🎤 Speak'}
+              </button>
+            )}
+          </label>
           <textarea value={form.description} onChange={e => update('description', e.target.value)} placeholder="Tell buyers about your produce — storage method, pesticide use, unique quality..." rows={3} />
         </div>
 
@@ -121,6 +163,14 @@ export default function ListProduce() {
         {mandiRate && (
           <div style={{ background: 'var(--mist)', borderRadius: '8px', padding: '0.85rem 1rem', marginBottom: '1rem', fontSize: '0.9rem', color: 'var(--bark)', borderLeft: '4px solid var(--leaf)' }}>
             Today&apos;s mandi rate for <strong>{form.crop}</strong>: <strong>₹{mandiRate.price.toLocaleString('en-IN')}/quintal</strong> at {mandiRate.market} — price your produce fairly.
+            <button
+              type="button"
+              className="btn-secondary"
+              onClick={() => update('price', String(mandiRate.price))}
+              style={{ marginLeft: '0.75rem', fontSize: '0.75rem', padding: '0.2rem 0.5rem' }}
+            >
+              Use benchmark
+            </button>
           </div>
         )}
 
