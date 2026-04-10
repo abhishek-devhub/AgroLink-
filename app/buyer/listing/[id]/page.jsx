@@ -134,6 +134,11 @@ export default function BuyerListingDetail() {
         },
         modal: {
           ondismiss: () => {
+            fetch('/api/payment/fail', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ orderId: data.orderId }),
+            });
             setPaymentLoading(false);
             setPaymentError('Payment was cancelled.');
           },
@@ -142,6 +147,11 @@ export default function BuyerListingDetail() {
 
       const razorpay = new window.Razorpay(options);
       razorpay.on('payment.failed', (response) => {
+        fetch('/api/payment/fail', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ orderId: data.orderId }),
+        });
         setPaymentLoading(false);
         setPaymentError(`Payment failed: ${response.error.description}`);
       });

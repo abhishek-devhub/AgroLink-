@@ -2,6 +2,7 @@ import './globals.css';
 import { AuthProvider } from '@/lib/auth-context';
 import Navbar from '@/components/Navbar/Navbar';
 import MandiTicker from '@/components/MandiTicker/MandiTicker';
+import GoogleTranslate from '@/components/GoogleTranslate/GoogleTranslate';
 
 export const metadata = {
   title: 'AgroLink — Fair Deals, Straight From the Field',
@@ -16,6 +17,7 @@ export default function RootLayout({ children }) {
           <Navbar />
           <MandiTicker />
           <main>{children}</main>
+          <GoogleTranslate />
         </AuthProvider>
       </body>
     </html>
