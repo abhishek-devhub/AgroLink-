@@ -8,6 +8,8 @@
     "start": "next start"
   },
   "dependencies": {
+    "fast-xml-parser": "^5.5.11",
+    "groq-sdk": "^1.1.2",
     "html2canvas": "^1.4.1",
     "jspdf": "^4.2.1",
     "mongoose": "^8.9.5",

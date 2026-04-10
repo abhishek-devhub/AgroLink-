@@ -7,6 +7,7 @@ import { useAuth } from '@/lib/auth-context';
 import MandiTicker from '@/components/MandiTicker/MandiTicker';
 import ActivityFeed from '@/components/ActivityFeed/ActivityFeed';
 import StatusBadge from '@/components/StatusBadge/StatusBadge';
+import GovtAnnouncements from '@/components/GovtAnnouncements/GovtAnnouncements';
 import styles from '../../dashboard.module.css';
 
 export default function FarmerDashboard() {
@@ -212,6 +213,9 @@ export default function FarmerDashboard() {
 
         <h3 className={styles.sectionTitle}>Recent Activity</h3>
         <ActivityFeed userId={user.id} role={user.role} limit={10} />
+
+        {/* Government Announcements — condensed view */}
+        <GovtAnnouncements condensed />
         
         <style dangerouslySetInnerHTML={{__html: `
           @keyframes pulse-dot { 0% { box-shadow: 0 0 0 0 rgba(230, 161, 92, 0.7); } 70% { box-shadow: 0 0 0 10px rgba(230, 161, 92, 0); } 100% { box-shadow: 0 0 0 0 rgba(230, 161, 92, 0); } }
