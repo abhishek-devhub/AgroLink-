@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { useAuth } from '@/lib/auth-context';
 import SupplyChainTracker from '@/components/SupplyChainTracker/SupplyChainTracker';
+import { QRCodeSVG } from 'qrcode.react';
 
 export default function FarmerTrackOrder() {
   const { user, loading } = useAuth();
@@ -11,7 +12,6 @@ export default function FarmerTrackOrder() {
   const params = useParams();
   const [order, setOrder] = useState(null);
   const [copied, setCopied] = useState(false);
-  const [poolFarmers, setPoolFarmers] = useState(3);
   const [poolFarmers, setPoolFarmers] = useState(3);
 
   useEffect(() => {
@@ -83,7 +83,7 @@ export default function FarmerTrackOrder() {
         />
 
         <div style={{ marginTop: '1.5rem', display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(280px,1fr))', gap: '1rem' }}>
-          <div style={{ border: '1px solid #e9ecef', borderRadius: '12px', padding: '1rem' }}>
+          <div style={{ border: '1px solid #e9ecef', borderRadius: '12px', padding: '1rem', background: 'linear-gradient(160deg, #ffffff 0%, #f8fff6 100%)' }}>
             <h3 style={{ marginTop: 0, color: 'var(--soil)', fontSize: '1rem' }}>💹 Fair Price AI</h3>
             <p style={{ margin: '0 0 0.5rem 0', color: 'var(--bark)', fontSize: '0.85rem' }}>
               Grade {order.fairPricing?.grade} with market benchmark ({order.fairPricing?.mandiMarket}).
@@ -93,11 +93,9 @@ export default function FarmerTrackOrder() {
             <p style={{ margin: '0.3rem 0', fontSize: '0.9rem' }}>Deal score: <strong>{order.fairPricing?.dealScore}/100</strong> ({order.fairPricing?.verdict})</p>
           </div>
 
-          <div style={{ border: '1px solid #e9ecef', borderRadius: '12px', padding: '1rem' }}>
+          <div style={{ border: '1px solid #e9ecef', borderRadius: '12px', padding: '1rem', background: 'linear-gradient(160deg, #ffffff 0%, #f4f9ff 100%)' }}>
             <h3 style={{ marginTop: 0, color: 'var(--soil)', fontSize: '1rem' }}>📱 Shareable QR Proof</h3>
-            {order.traceability?.qrImageUrl && (
-              <img src={order.traceability.qrImageUrl} alt="Traceability QR" width={120} height={120} />
-            )}
+            {order.traceability?.traceLink && <QRCodeSVG value={order.traceability.traceLink} size={120} includeMargin />}
             <div style={{ marginTop: '0.6rem', display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
               <a href={order.traceability?.traceLink} target="_blank" rel="noopener noreferrer" className="btn-secondary" style={{ fontSize: '0.8rem' }}>
                 Open public trace
@@ -108,7 +106,7 @@ export default function FarmerTrackOrder() {
             </div>
           </div>
 
-          <div style={{ border: '1px solid #e9ecef', borderRadius: '12px', padding: '1rem' }}>
+          <div style={{ border: '1px solid #e9ecef', borderRadius: '12px', padding: '1rem', background: 'linear-gradient(160deg, #ffffff 0%, #fffaf3 100%)' }}>
             <h3 style={{ marginTop: 0, color: 'var(--soil)', fontSize: '1rem' }}>🚚 Community Logistics Pooling</h3>
             <p style={{ color: 'var(--bark)', fontSize: '0.85rem' }}>
               Join nearby farmers to split transport and improve margins.
