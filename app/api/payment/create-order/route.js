@@ -18,26 +18,26 @@ export async function POST(req) {
       return NextResponse.json({ success: false, error: 'Listing is no longer available' }, { status: 400 });
     }
 
-    const totalAmount   = listing.price * quantity;   // in rupees
+    const totalAmount = listing.price * quantity;   // in rupees
     const amountInPaise = totalAmount * 100;           // Razorpay uses paise
 
     // Create Razorpay order
     const razorpay = new Razorpay({
-      key_id:     process.env.RAZORPAY_KEY_ID,
+      key_id: process.env.RAZORPAY_KEY_ID,
       key_secret: process.env.RAZORPAY_KEY_SECRET,
     });
 
     const razorpayOrder = await razorpay.orders.create({
-      amount:   amountInPaise,
+      amount: amountInPaise,
       currency: 'INR',
-      receipt:  `agrolink_${Date.now()}`,
+      receipt: `agrolink_${Date.now()}`,
       notes: {
         listingId: listingId.toString(),
-        buyerId:   buyerId.toString(),
+        buyerId: buyerId.toString(),
         buyerName,
-        farmerId:  listing.farmerId.toString(),
-        crop:      listing.crop,
-        quantity:  quantity.toString(),
+        farmerId: listing.farmerId.toString(),
+        crop: listing.crop,
+        quantity: quantity.toString(),
       },
     });
 
@@ -50,32 +50,32 @@ export async function POST(req) {
     // Create a pending order in MongoDB
     const order = await Order.create({
       listingId,
-      farmerId:    listing.farmerId,
-      farmerName:  listing.farmerName,
+      farmerId: listing.farmerId,
+      farmerName: listing.farmerName,
       buyerId,
       buyerName,
-      crop:        listing.crop,
-      variety:     listing.variety || '',
+      crop: listing.crop,
+      variety: listing.variety || '',
       quantity,
-      unit:        listing.unit,
+      unit: listing.unit,
       agreedPrice: listing.price,
       totalAmount,
-      grade:       listing.grade,
+      grade: listing.grade,
       batchId,
-      status:      'payment_pending',
+      status: 'payment_pending',
       paymentStatus: 'pending',
       payment: {
         razorpayOrderId: razorpayOrder.id,
-        amount:          totalAmount,
-        currency:        'INR',
-        status:          'pending',
+        amount: totalAmount,
+        currency: 'INR',
+        status: 'pending',
       },
       supplyChainSteps: [
-        { label: 'Harvested',       status: 'complete', timestamp: new Date() },
-        { label: 'Quality Checked', status: 'active',   timestamp: null },
-        { label: 'Packed & Loaded', status: 'pending',  timestamp: null },
-        { label: 'In Transit',      status: 'pending',  timestamp: null },
-        { label: 'Delivered',       status: 'pending',  timestamp: null },
+        { label: 'Harvested', status: 'complete', timestamp: new Date() },
+        { label: 'Quality Checked', status: 'active', timestamp: null },
+        { label: 'Packed & Loaded', status: 'pending', timestamp: null },
+        { label: 'In Transit', status: 'pending', timestamp: null },
+        { label: 'Delivered', status: 'pending', timestamp: null },
       ],
     });
 
@@ -83,10 +83,10 @@ export async function POST(req) {
       success: true,
       data: {
         razorpayOrderId: razorpayOrder.id,
-        amount:          amountInPaise,
-        currency:        'INR',
-        orderId:         order._id,
-        keyId:           process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID,
+        amount: amountInPaise,
+        currency: 'INR',
+        orderId: order._id,
+        keyId: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID,
         prefill: {
           name: buyerName,
           email: 'buyer@agrolink.in',

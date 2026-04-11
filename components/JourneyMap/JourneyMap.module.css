@@ -1,0 +1,207 @@
+/* ========================================
+   Journey Map — Premium Animated Styles
+   ======================================== */
+
+.mapWrap {
+  background: var(--white);
+  border-radius: 16px;
+  padding: 2rem;
+  box-shadow: 0 4px 20px var(--shadow);
+  margin-bottom: 2rem;
+  overflow: hidden;
+}
+
+.mapTitle {
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: var(--soil);
+  margin-bottom: 1.5rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+/* SVG Map Container */
+.mapContainer {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  background: linear-gradient(135deg, #e8f4e8 0%, #f0f7f0 50%, #e8efe8 100%);
+  border-radius: 14px;
+  overflow: hidden;
+  margin-bottom: 1.5rem;
+}
+
+.mapSvg {
+  width: 100%;
+  height: 100%;
+}
+
+/* Route Path */
+.routePath {
+  fill: none;
+  stroke: var(--leaf);
+  stroke-width: 3;
+  stroke-dasharray: 1000;
+  stroke-dashoffset: 1000;
+  animation: drawRoute 3s ease-out forwards;
+  filter: drop-shadow(0 2px 4px rgba(74, 124, 63, 0.3));
+}
+
+@keyframes drawRoute {
+  to { stroke-dashoffset: 0; }
+}
+
+.routePathBg {
+  fill: none;
+  stroke: rgba(74, 124, 63, 0.15);
+  stroke-width: 6;
+  stroke-linecap: round;
+}
+
+/* Checkpoint Markers */
+.checkpoint {
+  cursor: pointer;
+  transition: transform 0.3s ease;
+}
+
+.checkpoint:hover {
+  transform: scale(1.2);
+}
+
+.checkpointCircle {
+  transition: all 0.3s ease;
+}
+
+.checkpointCircle.complete {
+  fill: var(--leaf);
+  filter: drop-shadow(0 2px 6px rgba(74, 124, 63, 0.4));
+}
+
+.checkpointCircle.active {
+  fill: var(--harvest);
+  filter: drop-shadow(0 2px 8px rgba(212, 140, 45, 0.5));
+  animation: checkpointPulse 2s infinite;
+}
+
+.checkpointCircle.pending {
+  fill: #d0c8be;
+}
+
+@keyframes checkpointPulse {
+  0%, 100% { r: 10; opacity: 1; }
+  50% { r: 14; opacity: 0.7; }
+}
+
+.checkpointInner {
+  fill: white;
+  pointer-events: none;
+}
+
+.checkpointLabel {
+  font-size: 11px;
+  font-weight: 600;
+  fill: var(--soil);
+  text-anchor: middle;
+}
+
+.checkpointTime {
+  font-size: 9px;
+  fill: var(--bark);
+  text-anchor: middle;
+}
+
+/* Moving Vehicle */
+.vehicleGroup {
+  animation: moveVehicle 8s ease-in-out infinite;
+}
+
+@keyframes moveVehicle {
+  0% { offset-distance: 0%; }
+  100% { offset-distance: 100%; }
+}
+
+.vehicleIcon {
+  font-size: 24px;
+  filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2));
+}
+
+/* Info Cards Below Map */
+.mapInfoGrid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1rem;
+}
+
+.mapInfoCard {
+  background: var(--mist);
+  border-radius: 12px;
+  padding: 1rem;
+  text-align: center;
+}
+
+.mapInfoValue {
+  font-size: 1.4rem;
+  font-weight: 700;
+  margin-bottom: 0.2rem;
+}
+
+.mapInfoValue.distance { color: var(--sky); }
+.mapInfoValue.time { color: var(--harvest); }
+.mapInfoValue.carbon { color: var(--leaf); }
+
+.mapInfoLabel {
+  font-size: 0.78rem;
+  color: var(--bark);
+  font-weight: 600;
+}
+
+/* Freshness Indicator */
+.freshnessWrap {
+  margin-top: 1.5rem;
+}
+
+.freshnessTitle {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--soil);
+  margin-bottom: 0.5rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.freshnessBar {
+  height: 10px;
+  background: linear-gradient(90deg, #4CAF50, #8BC34A, #CDDC39, #FFC107, #FF9800, #F44336);
+  border-radius: 5px;
+  position: relative;
+  margin-bottom: 0.5rem;
+}
+
+.freshnessMarker {
+  position: absolute;
+  top: -6px;
+  width: 22px;
+  height: 22px;
+  background: var(--white);
+  border: 3px solid var(--soil);
+  border-radius: 50%;
+  transform: translateX(-50%);
+  box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+  transition: left 1.5s ease-out;
+}
+
+.freshnessLabels {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.75rem;
+  color: var(--bark);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .mapInfoGrid {
+    grid-template-columns: 1fr;
+  }
+}

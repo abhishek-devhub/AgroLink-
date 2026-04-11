@@ -71,8 +71,8 @@ export default function GoogleTranslate() {
       {/* Hidden google translate container */}
       <div id="google_translate_element" style={{ display: 'none' }}></div>
 
-      {/* Floating Custom UI */}
-      <div style={{ position: 'fixed', bottom: '24px', left: '24px', zIndex: 10000 }}>
+      {/* Floating Custom UI - Marked with 'notranslate' to prevent dropdown from being translated */}
+      <div className="notranslate" style={{ position: 'fixed', bottom: '24px', left: '24px', zIndex: 10000 }}>
         {isOpen && (
           <div style={{
             background: '#ffffff',

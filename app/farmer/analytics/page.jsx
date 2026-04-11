@@ -1,14 +1,14 @@
 import AnalyticsDashboard from '@/components/AnalyticsDashboard/AnalyticsDashboard';
 
 export const metadata = {
-  title: 'Analytics Dashboard | AgroLink',
-  description: 'Actionable insights to maximize your farming profits and operations.',
+  title: 'Farm Analytics | AgroLink',
+  description: 'Real-time insights from your orders, listings, payments, and ratings.',
 };
 
 export default function FarmerAnalyticsPage() {
   return (
     <div className="page-container">
-      <AnalyticsDashboard defaultRole="farmer" />
+      <AnalyticsDashboard />
     </div>
   );
 }

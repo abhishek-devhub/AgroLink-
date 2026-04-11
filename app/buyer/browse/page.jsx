@@ -5,8 +5,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/auth-context';
 import StatusBadge from '@/components/StatusBadge/StatusBadge';
-
-const CROPS = ['Wheat', 'Rice', 'Tomato', 'Onion', 'Sugarcane', 'Soybean'];
+import { CROPS } from '@/lib/config';
 
 export default function BrowseListings() {
   const { user, loading } = useAuth();

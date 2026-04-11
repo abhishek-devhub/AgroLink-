@@ -44,7 +44,7 @@ export async function POST(req) {
         currency: 'INR',
         orderId: order._id,
         keyId: process.env.RAZORPAY_KEY_ID || process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID,
-        prefill: { 
+        prefill: {
           name: order.buyerName || 'Buyer',
           email: 'buyer@agrolink.in',
           contact: '9999999999'

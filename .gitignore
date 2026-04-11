@@ -18,3 +18,4 @@ build
 *.pem
 
 # debug~
+.env.local

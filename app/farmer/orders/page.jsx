@@ -101,6 +101,11 @@ export default function FarmerOrders() {
                   <div>
                     <h3 style={{ fontSize: '1.05rem', color: 'var(--soil)' }}>{order.crop}</h3>
                     <p style={{ fontSize: '0.85rem', color: 'var(--bark)' }}>Buyer: {order.buyerName}</p>
+                    {(order.buyerCity || order.buyerAddress) && (
+                      <p style={{ fontSize: '0.78rem', color: 'var(--bark)', opacity: 0.7, marginTop: '0.15rem' }}>
+                        📍 {order.buyerAddress ? `${order.buyerAddress}, ` : ''}{order.buyerCity}{order.buyerState ? `, ${order.buyerState}` : ''} {order.buyerPincode && `- ${order.buyerPincode}`}
+                      </p>
+                    )}
                   </div>
                   <div style={{ display: 'flex', gap: '0.5rem', flexDirection: 'column', alignItems: 'flex-end' }}>
                     <StatusBadge status={getStatusLabel(order.status)} />
@@ -116,12 +121,24 @@ export default function FarmerOrders() {
                   </div>
                 </div>
 
-                <div style={{ display: 'flex', gap: '2rem', fontSize: '0.9rem', color: 'var(--bark)', marginBottom: '0.75rem', flexWrap: 'wrap' }}>
+                <div style={{ display: 'flex', gap: '2rem', fontSize: '0.9rem', color: 'var(--bark)', marginBottom: '0.5rem', flexWrap: 'wrap' }}>
                   <span>Qty: <strong>{order.quantity}{order.unit === 'kg' ? 'kg' : 'q'}</strong></span>
                   <span>Price: <strong>₹{order.agreedPrice?.toLocaleString('en-IN')}/{order.unit === 'kg' ? 'kg' : 'q'}</strong></span>
                   <span>Total: <strong style={{ color: 'var(--leaf)' }}>₹{totalAmount.toLocaleString('en-IN')}</strong></span>
                   <span>Date: {new Date(order.createdAt).toLocaleDateString('en-IN')}</span>
                 </div>
+
+                {/* Shipment badge */}
+                {order.shipmentId && (
+                  <div style={{
+                    display: 'inline-flex', alignItems: 'center', gap: '0.4rem',
+                    background: 'rgba(123, 175, 212, 0.1)', padding: '0.3rem 0.7rem',
+                    borderRadius: '6px', fontSize: '0.78rem', fontWeight: 600,
+                    color: 'var(--sky)', marginBottom: '0.75rem',
+                  }}>
+                    🚚 {order.courierPartner}: <code style={{ fontSize: '0.78rem', fontFamily: 'monospace' }}>{order.shipmentId}</code>
+                  </div>
+                )}
 
                 <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
                   {tab === 'pending' && order.status === 'confirmed' && (

@@ -7,6 +7,7 @@ import { useAuth } from '@/lib/auth-context';
 import MandiTicker from '@/components/MandiTicker/MandiTicker';
 import ActivityFeed from '@/components/ActivityFeed/ActivityFeed';
 import StatusBadge from '@/components/StatusBadge/StatusBadge';
+import GovtAnnouncements from '@/components/GovtAnnouncements/GovtAnnouncements';
 import styles from '../../dashboard.module.css';
 
 export default function FarmerDashboard() {
@@ -66,11 +67,18 @@ export default function FarmerDashboard() {
   return (
     <div className={styles.dashWrap}>
       <div className="page-container">
+        {/* Welcome Banner */}
         <div className={styles.welcome}>
           <h1>{greeting}, {user.name} 🌾</h1>
           <p>{today}</p>
+          {(user.village || user.district) && (
+            <p style={{ opacity: 0.7, fontSize: '0.85rem', marginTop: '0.25rem' }}>
+              📍 {user.village}{user.village ? ', ' : ''}{user.district}, {user.state} {user.pincode && `- ${user.pincode}`}
+            </p>
+          )}
         </div>
 
+        {/* Stats */}
         <div className="grid-4">
           <div className="stat-card">
             <h3>{stats.activeListings}</h3>
@@ -90,6 +98,7 @@ export default function FarmerDashboard() {
           </div>
         </div>
 
+        {/* Quick Actions */}
         <div className={styles.quickActions}>
           <Link href="/farmer/list-produce" className="btn-primary">+ List New Produce</Link>
           <Link href="/farmer/orders" className="btn-secondary">View Orders</Link>
@@ -97,6 +106,30 @@ export default function FarmerDashboard() {
           <Link href="/farmer/skills" className="btn-secondary">Browse Skill Courses</Link>
         </div>
 
+        {/* Mandi Ticker */}
+        <MandiTicker />
+
+        {/* Smart Tools */}
+        <h3 className={styles.sectionTitle} style={{ marginTop: '2rem' }}>🚀 Smart Tools</h3>
+        <div className="grid-3">
+          <Link href="/farmer/trust-score" className="card" style={{ textDecoration: 'none', textAlign: 'center', cursor: 'pointer', borderLeft: '4px solid var(--harvest)' }}>
+            <div style={{ fontSize: '2.5rem', marginBottom: '0.5rem' }}>⭐</div>
+            <h4 style={{ color: 'var(--soil)', marginBottom: '0.3rem', fontSize: '1rem' }}>Trust Score</h4>
+            <p style={{ color: 'var(--bark)', fontSize: '0.82rem' }}>Your reputation credit profile</p>
+          </Link>
+          <Link href="/farmer/smart-pricing" className="card" style={{ textDecoration: 'none', textAlign: 'center', cursor: 'pointer', borderLeft: '4px solid var(--sky)' }}>
+            <div style={{ fontSize: '2.5rem', marginBottom: '0.5rem' }}>🌦️</div>
+            <h4 style={{ color: 'var(--soil)', marginBottom: '0.3rem', fontSize: '1rem' }}>Smart Pricing</h4>
+            <p style={{ color: 'var(--bark)', fontSize: '0.82rem' }}>Live weather-aware price insights</p>
+          </Link>
+          <Link href="/community" className="card" style={{ textDecoration: 'none', textAlign: 'center', cursor: 'pointer', borderLeft: '4px solid #9C27B0' }}>
+            <div style={{ fontSize: '2.5rem', marginBottom: '0.5rem' }}>🌾</div>
+            <h4 style={{ color: 'var(--soil)', marginBottom: '0.3rem', fontSize: '1rem' }}>Community Hub</h4>
+            <p style={{ color: 'var(--bark)', fontSize: '0.82rem' }}>Share tips, ask questions</p>
+          </Link>
+        </div>
+
+        {/* Recent Orders */}
         <h3 className={styles.sectionTitle} style={{ marginTop: '2rem' }}>Recent Orders</h3>
         {recentOrders.length === 0 ? (
           <div className="card" style={{ padding: '2rem', textAlign: 'center', color: 'var(--bark)' }}>
@@ -131,7 +164,19 @@ export default function FarmerDashboard() {
                   </div>
                   
                   <h3 style={{ fontSize: '1.1rem', color: 'var(--soil)', marginBottom: '0.2rem' }}>{order.crop} — {order.variety || ''}</h3>
-                  <p style={{ fontSize: '0.9rem', color: 'var(--bark)', marginBottom: '1rem' }}>Buyer: {order.buyerName}</p>
+                  <p style={{ fontSize: '0.9rem', color: 'var(--bark)', marginBottom: '0.25rem' }}>Buyer: {order.buyerName}</p>
+                  {order.buyerCity && (
+                    <p style={{ fontSize: '0.8rem', color: 'var(--bark)', marginBottom: '0.75rem', opacity: 0.7 }}>
+                      📍 {order.buyerCity}{order.buyerState ? `, ${order.buyerState}` : ''}
+                    </p>
+                  )}
+                  
+                  {/* Shipment badge */}
+                  {order.shipmentId && (
+                    <p style={{ fontSize: '0.78rem', color: 'var(--sky)', fontWeight: 600, marginBottom: '0.75rem' }}>
+                      🚚 {order.courierPartner}: {order.shipmentId}
+                    </p>
+                  )}
                   
                   <p style={{ fontSize: '0.9rem', color: 'var(--bark)', marginBottom: '1.5rem', fontWeight: 500 }}>
                     {order.quantity} quintal &middot; ₹{order.agreedPrice}/q &middot; Total: <span style={{ color: 'var(--leaf)' }}>₹{totalAmount.toLocaleString('en-IN')}</span>
@@ -193,6 +238,9 @@ export default function FarmerDashboard() {
 
         <h3 className={styles.sectionTitle}>Recent Activity</h3>
         <ActivityFeed userId={user.id} role={user.role} limit={10} />
+
+        {/* Government Announcements — condensed view */}
+        <GovtAnnouncements condensed />
         
         <style dangerouslySetInnerHTML={{__html: `
           @keyframes pulse-dot { 0% { box-shadow: 0 0 0 0 rgba(230, 161, 92, 0.7); } 70% { box-shadow: 0 0 0 10px rgba(230, 161, 92, 0); } 100% { box-shadow: 0 0 0 0 rgba(230, 161, 92, 0); } }

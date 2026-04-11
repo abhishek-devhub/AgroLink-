@@ -20,7 +20,7 @@ export default function MyListings() {
     fetch(`/api/listings?farmerId=${user.id}`)
       .then(r => r.json())
       .then(setListings)
-      .catch(() => {});
+      .catch(() => { });
   }, [user]);
 
   if (loading || !user) return null;

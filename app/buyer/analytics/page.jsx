@@ -1,14 +1,5 @@
-import AnalyticsDashboard from '@/components/AnalyticsDashboard/AnalyticsDashboard';
-
-export const metadata = {
-  title: 'Analytics Dashboard | AgroLink',
-  description: 'Smart procurement insights and farmer performance tracking.',
-};
+import { redirect } from 'next/navigation';
 
 export default function BuyerAnalyticsPage() {
-  return (
-    <div className="page-container">
-      <AnalyticsDashboard defaultRole="buyer" />
-    </div>
-  );
+  redirect('/buyer/dashboard');
 }

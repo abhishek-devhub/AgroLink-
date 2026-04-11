@@ -8,10 +8,14 @@
     "start": "next start"
   },
   "dependencies": {
+    "bcryptjs": "^3.0.3",
+    "fast-xml-parser": "^5.5.11",
+    "groq-sdk": "^1.1.2",
     "html2canvas": "^1.4.1",
     "jspdf": "^4.2.1",
     "mongoose": "^8.9.5",
     "next": "^14.2.29",
+    "qrcode.react": "^4.2.0",
     "razorpay": "^2.9.6",
     "react": "^18.3.1",
     "react-dom": "^18.3.1"

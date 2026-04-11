@@ -41,11 +41,11 @@ export async function POST(request) {
     const listing = await Listing.create(body);
 
     await addActivity({
-      userId:  listing.farmerId,
-      role:    'farmer',
-      type:    'listing_created',
+      userId: listing.farmerId,
+      role: 'farmer',
+      type: 'listing_created',
       message: `Your ${listing.variety || ''} ${listing.crop} listing (${listing.quantity}${listing.unit}) is now live on the marketplace`,
-      meta:    { listingId: listing._id, crop: listing.crop, quantity: listing.quantity }
+      meta: { listingId: listing._id, crop: listing.crop, quantity: listing.quantity }
     });
 
     return NextResponse.json(listing, { status: 201 });

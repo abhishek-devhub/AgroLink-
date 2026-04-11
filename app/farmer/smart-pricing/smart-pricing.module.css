@@ -1,0 +1,705 @@
+/* ========================================
+   Weather-Smart Pricing — Premium Styles
+   ======================================== */
+
+.pricingWrap {
+  min-height: 100vh;
+  background: linear-gradient(165deg, #e8eef5 0%, var(--cream) 50%, var(--mist) 100%);
+  padding-bottom: 4rem;
+}
+
+/* Header */
+.header {
+  background: linear-gradient(135deg, #1a2744 0%, #2c3e5a 60%, #3d5275 100%);
+  color: #e8eef5;
+  padding: 2.5rem 2rem;
+  border-radius: 0 0 24px 24px;
+  margin-bottom: 2rem;
+  position: relative;
+  overflow: hidden;
+}
+
+.header::after {
+  content: '';
+  position: absolute;
+  top: -60px;
+  right: -60px;
+  width: 250px;
+  height: 250px;
+  background: radial-gradient(circle, rgba(255, 193, 7, 0.12) 0%, transparent 70%);
+  border-radius: 50%;
+}
+
+.header h1 {
+  font-size: 2rem;
+  margin-bottom: 0.5rem;
+  position: relative;
+}
+
+.header p {
+  font-size: 1rem;
+  opacity: 0.8;
+  position: relative;
+  max-width: 600px;
+}
+
+.liveTag {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  background: rgba(76, 175, 80, 0.2);
+  color: #a5d6a7;
+  padding: 0.35rem 0.85rem;
+  border-radius: 20px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  margin-top: 0.75rem;
+  position: relative;
+}
+
+.liveDot {
+  width: 8px;
+  height: 8px;
+  background: #4caf50;
+  border-radius: 50%;
+  animation: livePulse 1.5s ease-in-out infinite;
+}
+
+@keyframes livePulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.5; transform: scale(1.4); }
+}
+
+.advisory.info {
+  background: linear-gradient(135deg, #e3f2fd, #e8eaf6);
+  color: #1565c0;
+  border: 1px solid #90caf9;
+}
+
+/* Weather Card */
+.weatherCard {
+  background: var(--white);
+  border-radius: 20px;
+  padding: 2rem;
+  box-shadow: 0 4px 24px var(--shadow);
+  margin-bottom: 2rem;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2rem;
+}
+
+.weatherMain {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+}
+
+.weatherIcon {
+  font-size: 5rem;
+  line-height: 1;
+  animation: weatherBounce 3s ease-in-out infinite;
+}
+
+@keyframes weatherBounce {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-8px); }
+}
+
+.weatherInfo h2 {
+  font-size: 1.6rem;
+  color: var(--soil);
+  margin-bottom: 0.3rem;
+}
+
+.weatherTemp {
+  font-size: 3rem;
+  font-weight: 800;
+  color: var(--soil);
+  line-height: 1;
+  margin-bottom: 0.5rem;
+}
+
+.weatherTemp span {
+  font-size: 1.5rem;
+  color: var(--bark);
+  font-weight: 400;
+}
+
+.weatherRegion {
+  font-size: 0.9rem;
+  color: var(--bark);
+}
+
+.weatherMetrics {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+  align-content: center;
+}
+
+.weatherMetric {
+  background: var(--mist);
+  border-radius: 12px;
+  padding: 1rem;
+  text-align: center;
+}
+
+.weatherMetric .value {
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: var(--soil);
+}
+
+.weatherMetric .label {
+  font-size: 0.78rem;
+  color: var(--bark);
+  font-weight: 600;
+  margin-top: 2px;
+}
+
+/* Advisory Banner */
+.advisory {
+  padding: 1rem 1.5rem;
+  border-radius: 12px;
+  margin-bottom: 2rem;
+  font-size: 0.92rem;
+  font-weight: 600;
+  line-height: 1.5;
+}
+
+.advisory.warning {
+  background: linear-gradient(135deg, #fff3e0, #ffecd2);
+  color: #e65100;
+  border: 1px solid #ffcc80;
+}
+
+.advisory.danger {
+  background: linear-gradient(135deg, #fde8e8, #fce4ec);
+  color: #c62828;
+  border: 1px solid #ef9a9a;
+}
+
+.advisory.normal {
+  background: linear-gradient(135deg, #e8f5e9, #f1f8f1);
+  color: #2e7d32;
+  border: 1px solid #a5d6a7;
+}
+
+/* Forecast Strip */
+.forecastStrip {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 0.75rem;
+  margin-bottom: 2.5rem;
+}
+
+.forecastDay {
+  background: var(--white);
+  border-radius: 14px;
+  padding: 1rem 0.75rem;
+  text-align: center;
+  box-shadow: 0 2px 12px var(--shadow);
+  transition: transform 0.3s ease;
+}
+
+.forecastDay:hover {
+  transform: translateY(-4px);
+}
+
+.forecastDay.today {
+  background: linear-gradient(135deg, var(--leaf), #5a9a4e);
+  color: white;
+}
+
+.forecastDay .dayLabel {
+  font-size: 0.78rem;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+  opacity: 0.8;
+}
+
+.forecastDay .dayIcon {
+  font-size: 1.8rem;
+  margin-bottom: 0.5rem;
+}
+
+.forecastDay .dayTemp {
+  font-size: 1.1rem;
+  font-weight: 700;
+}
+
+.forecastDay .dayCondition {
+  font-size: 0.7rem;
+  opacity: 0.7;
+  margin-top: 0.25rem;
+}
+
+/* Crop Analysis Section */
+.analysisTitle {
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: var(--soil);
+  margin-bottom: 1.5rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.cropGrid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1.25rem;
+  margin-bottom: 2.5rem;
+}
+
+.cropCard {
+  background: var(--white);
+  border-radius: 16px;
+  padding: 1.75rem;
+  box-shadow: 0 2px 12px var(--shadow);
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.cropCard:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 28px var(--shadow-hover);
+}
+
+.cropHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.cropName {
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: var(--soil);
+}
+
+.priceChangeBadge {
+  padding: 4px 12px;
+  border-radius: 16px;
+  font-size: 0.85rem;
+  font-weight: 700;
+}
+
+.priceChangeBadge.up {
+  background: #e8f5e9;
+  color: #2e7d32;
+}
+
+.priceChangeBadge.down {
+  background: #fce4ec;
+  color: #c62828;
+}
+
+.priceChangeBadge.neutral {
+  background: #f5f5f5;
+  color: #616161;
+}
+
+.priceRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid #f0ebe3;
+}
+
+.priceLabel {
+  font-size: 0.82rem;
+  color: var(--bark);
+}
+
+.priceValue {
+  font-size: 1.3rem;
+  font-weight: 700;
+}
+
+.priceValue.base { color: var(--bark); text-decoration: line-through; font-size: 1rem; }
+.priceValue.adjusted { color: var(--leaf); }
+
+.cropInsight {
+  font-size: 0.88rem;
+  color: var(--bark);
+  line-height: 1.5;
+  margin-bottom: 1rem;
+  padding: 0.75rem;
+  background: #fafaf7;
+  border-radius: 8px;
+  border-left: 3px solid var(--sky);
+}
+
+.sellBadge {
+  padding: 0.6rem 1rem;
+  border-radius: 10px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  width: 100%;
+  text-align: center;
+}
+
+.sellBadge.high {
+  background: linear-gradient(135deg, #e8f5e9, #c8e6c9);
+  color: #1b5e20;
+  border: 1px solid #a5d6a7;
+}
+
+.sellBadge.medium {
+  background: linear-gradient(135deg, #fff8e1, #fff3c4);
+  color: #f57f17;
+  border: 1px solid #ffe082;
+}
+
+.sellBadge.low {
+  background: linear-gradient(135deg, #fce4ec, #f8bbd0);
+  color: #c62828;
+  border: 1px solid #ef9a9a;
+}
+
+/* Impact Meter */
+.impactMeter {
+  height: 6px;
+  background: #e8e3da;
+  border-radius: 3px;
+  margin: 0.5rem 0;
+  overflow: hidden;
+}
+
+.impactFill {
+  height: 100%;
+  border-radius: 3px;
+  transition: width 1.5s ease-out;
+}
+
+.impactFill.positive { background: linear-gradient(90deg, #66bb6a, #4caf50); }
+.impactFill.negative { background: linear-gradient(90deg, #ef5350, #e53935); }
+.impactFill.neutral { background: linear-gradient(90deg, #bdbdbd, #9e9e9e); }
+
+/* ========================================
+   AI Market Advisor Panel
+   ======================================== */
+
+.aiPanel {
+  background: linear-gradient(135deg, #ffffff 0%, #f8f7ff 40%, #f0f4ff 100%);
+  border: 1px solid #e0e0f0;
+  border-radius: 20px;
+  padding: 2rem;
+  margin-bottom: 2.5rem;
+  box-shadow: 0 4px 24px rgba(80, 60, 120, 0.08);
+  position: relative;
+  overflow: hidden;
+}
+
+.aiPanel::before {
+  content: '';
+  position: absolute;
+  top: -40px;
+  right: -40px;
+  width: 180px;
+  height: 180px;
+  background: radial-gradient(circle, rgba(139, 92, 246, 0.08) 0%, transparent 70%);
+  border-radius: 50%;
+}
+
+.aiPanel::after {
+  content: '';
+  position: absolute;
+  bottom: -30px;
+  left: -30px;
+  width: 140px;
+  height: 140px;
+  background: radial-gradient(circle, rgba(59, 130, 246, 0.06) 0%, transparent 70%);
+  border-radius: 50%;
+}
+
+.aiHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1.5rem;
+  position: relative;
+  z-index: 1;
+}
+
+.aiHeaderLeft {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.aiIcon {
+  font-size: 2rem;
+  line-height: 1;
+  animation: aiPulse 2s ease-in-out infinite;
+}
+
+@keyframes aiPulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.1); }
+}
+
+.aiTitle {
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: var(--soil);
+  margin-bottom: 0.1rem;
+}
+
+.aiSub {
+  font-size: 0.75rem;
+  color: var(--bark);
+  opacity: 0.7;
+}
+
+.aiBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: #7c3aed;
+  background: linear-gradient(135deg, #ede9fe, #e0e7ff);
+  border: 1px solid #c4b5fd;
+  padding: 0.3rem 0.75rem;
+  border-radius: 999px;
+  letter-spacing: 0.02em;
+}
+
+/* Outlook */
+.aiOutlook {
+  background: linear-gradient(135deg, #fefce8, #fff7ed);
+  border: 1px solid #fde68a;
+  border-radius: 12px;
+  padding: 1rem 1.25rem;
+  margin-bottom: 1.25rem;
+  position: relative;
+  z-index: 1;
+}
+
+.aiOutlook p {
+  font-size: 0.95rem;
+  color: #78350f;
+  font-weight: 500;
+  line-height: 1.6;
+  margin: 0;
+}
+
+/* Top Action */
+.aiTopAction {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  background: linear-gradient(135deg, #ecfdf5, #f0fdf4);
+  border: 1px solid #86efac;
+  border-radius: 12px;
+  padding: 1rem 1.25rem;
+  margin-bottom: 1.25rem;
+  position: relative;
+  z-index: 1;
+}
+
+.aiTopActionIcon {
+  font-size: 1.5rem;
+  background: linear-gradient(135deg, #22c55e, #16a34a);
+  width: 2.5rem;
+  height: 2.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 10px;
+  flex-shrink: 0;
+}
+
+.aiTopActionLabel {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: #15803d;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin-bottom: 0.15rem;
+}
+
+.aiTopActionText {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: #14532d;
+  line-height: 1.3;
+}
+
+/* Sell Strategy */
+.aiStrategyWrap {
+  margin-bottom: 1.25rem;
+  position: relative;
+  z-index: 1;
+}
+
+.aiStrategyTitle {
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--soil);
+  margin-bottom: 0.75rem;
+}
+
+.aiStrategyGrid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.75rem;
+}
+
+.aiStrategyCard {
+  background: var(--white);
+  border-radius: 12px;
+  padding: 1rem;
+  box-shadow: 0 1px 6px rgba(0, 0, 0, 0.06);
+  border: 1px solid #f0ece6;
+  text-align: center;
+}
+
+.aiStrategyCrop {
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--soil);
+  margin-bottom: 0.5rem;
+}
+
+.aiStrategyAction {
+  display: inline-block;
+  font-size: 0.72rem;
+  font-weight: 700;
+  padding: 0.25rem 0.6rem;
+  border-radius: 6px;
+  margin-bottom: 0.5rem;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.aiSell {
+  background: #dcfce7;
+  color: #166534;
+  border: 1px solid #86efac;
+}
+
+.aiHold {
+  background: #fef9c3;
+  color: #854d0e;
+  border: 1px solid #fde68a;
+}
+
+.aiWait {
+  background: #fee2e2;
+  color: #991b1b;
+  border: 1px solid #fca5a5;
+}
+
+.aiStrategyReason {
+  font-size: 0.78rem;
+  color: var(--bark);
+  line-height: 1.4;
+  margin: 0;
+}
+
+/* Risk + Week Ahead footer row */
+.aiFooterRow {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+  position: relative;
+  z-index: 1;
+}
+
+.aiRiskAlerts {
+  background: linear-gradient(135deg, #fff7ed, #fef3c7);
+  border: 1px solid #fed7aa;
+  border-radius: 12px;
+  padding: 1rem 1.25rem;
+}
+
+.aiRiskAlerts h4 {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: #9a3412;
+  margin-bottom: 0.5rem;
+}
+
+.aiRiskAlerts ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.aiRiskAlerts li {
+  font-size: 0.82rem;
+  color: #92400e;
+  padding: 0.25rem 0;
+  padding-left: 1rem;
+  position: relative;
+  line-height: 1.4;
+}
+
+.aiRiskAlerts li::before {
+  content: '•';
+  position: absolute;
+  left: 0;
+  color: #f97316;
+  font-weight: 700;
+}
+
+.aiWeekAhead {
+  background: linear-gradient(135deg, #eff6ff, #e0f2fe);
+  border: 1px solid #93c5fd;
+  border-radius: 12px;
+  padding: 1rem 1.25rem;
+}
+
+.aiWeekAhead h4 {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: #1e40af;
+  margin-bottom: 0.5rem;
+}
+
+.aiWeekAhead p {
+  font-size: 0.85rem;
+  color: #1e3a5f;
+  line-height: 1.5;
+  margin: 0;
+}
+
+/* Responsive */
+@media (max-width: 900px) {
+  .weatherCard {
+    grid-template-columns: 1fr;
+  }
+  .cropGrid {
+    grid-template-columns: 1fr;
+  }
+  .forecastStrip {
+    grid-template-columns: repeat(4, 1fr);
+  }
+  .aiStrategyGrid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .aiFooterRow {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 600px) {
+  .forecastStrip {
+    grid-template-columns: repeat(3, 1fr);
+  }
+  .aiStrategyGrid {
+    grid-template-columns: 1fr;
+  }
+  .aiPanel {
+    padding: 1.25rem;
+  }
+}
+
