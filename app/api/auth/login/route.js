@@ -16,8 +16,11 @@ export async function POST(request) {
           role: 'farmer',
           name: farmer.name,
           phone: farmer.phone,
+          village: farmer.village,
           district: farmer.district,
           state: farmer.state,
+          address: farmer.address,
+          pincode: farmer.pincode,
           crops: farmer.crops,
         },
       });
@@ -32,8 +35,11 @@ export async function POST(request) {
           businessName: buyer.businessName,
           ownerName: buyer.ownerName,
           phone: buyer.phone,
+          email: buyer.email,
           city: buyer.city,
           state: buyer.state,
+          address: buyer.address,
+          pincode: buyer.pincode,
         },
       });
     }

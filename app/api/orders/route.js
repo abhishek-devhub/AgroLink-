@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server';
 import dbConnect from '@/lib/mongodb';
 import Order from '@/lib/models/Order';
+import Farmer from '@/lib/models/Farmer';
+import Buyer from '@/lib/models/Buyer';
 import { addActivity } from '@/lib/activityServer';
 
 export async function GET(request) {
@@ -30,9 +32,47 @@ export async function POST(request) {
     const batchPrefix = body.farmerDistrict ? body.farmerDistrict.substring(0, 3).toUpperCase() : 'AGR';
     const batchId = `${batchPrefix}-2024-${Math.floor(1000 + Math.random() * 9000)}`;
 
+    // Lookup farmer and buyer addresses from DB
+    let farmerAddress = body.farmerAddress || '';
+    let farmerPincode = body.farmerPincode || '';
+    let farmerDistrict = body.farmerDistrict || '';
+    let farmerState = body.farmerState || '';
+    let buyerAddress = body.buyerAddress || '';
+    let buyerPincode = body.buyerPincode || '';
+    let buyerCity = body.buyerCity || '';
+    let buyerState = body.buyerState || '';
+
+    try {
+      const farmer = await Farmer.findById(body.farmerId);
+      if (farmer) {
+        farmerAddress = farmerAddress || farmer.address || '';
+        farmerPincode = farmerPincode || farmer.pincode || '';
+        farmerDistrict = farmerDistrict || farmer.district || '';
+        farmerState = farmerState || farmer.state || '';
+      }
+    } catch {}
+
+    try {
+      const buyer = await Buyer.findById(body.buyerId);
+      if (buyer) {
+        buyerAddress = buyerAddress || buyer.address || '';
+        buyerPincode = buyerPincode || buyer.pincode || '';
+        buyerCity = buyerCity || buyer.city || '';
+        buyerState = buyerState || buyer.state || '';
+      }
+    } catch {}
+
     const order = await Order.create({
       ...body,
       batchId,
+      farmerAddress,
+      farmerPincode,
+      farmerDistrict,
+      farmerState,
+      buyerAddress,
+      buyerPincode,
+      buyerCity,
+      buyerState,
       supplyChainSteps: [
         { label: 'Harvested', status: 'complete', timestamp: new Date() },
         { label: 'Quality Checked', status: 'active', timestamp: null },

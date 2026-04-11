@@ -13,6 +13,7 @@ export default function BuyerOrders() {
   const [tab, setTab] = useState('active');
   const [paymentLoadingId, setPaymentLoadingId] = useState(null);
   const [paymentError, setPaymentError] = useState(null);
+  const [searchQuery, setSearchQuery] = useState('');
 
   // Helper to dynamically load Razorpay script
   const loadRazorpay = () => {
@@ -46,10 +47,6 @@ export default function BuyerOrders() {
 
   if (loading || !user) return null;
 
-  // Tab grouping:
-  // "Active Deliveries" = confirmed (paid, farmer working) + in_progress (packed/in transit)
-  // "Pending" = pending + payment_pending (awaiting payment)
-  // "Completed" = completed (delivered)
   const tabFilter = (order) => {
     if (tab === 'active') return order.status === 'confirmed' || order.status === 'in_progress';
     if (tab === 'pending') return order.status === 'pending' || order.status === 'checkout_pending';
@@ -64,7 +61,20 @@ export default function BuyerOrders() {
     return 0;
   };
 
-  const filtered = orders.filter(tabFilter);
+  // Apply search filter on top of tab filter
+  const searchFilter = (order) => {
+    if (!searchQuery.trim()) return true;
+    const q = searchQuery.toLowerCase();
+    return (
+      order.crop?.toLowerCase().includes(q) ||
+      order.farmerName?.toLowerCase().includes(q) ||
+      order.batchId?.toLowerCase().includes(q) ||
+      order.shipmentId?.toLowerCase().includes(q) ||
+      order.courierPartner?.toLowerCase().includes(q)
+    );
+  };
+
+  const filtered = orders.filter(tabFilter).filter(searchFilter);
 
   const TAB_LABELS = {
     active: 'Active Deliveries',
@@ -80,7 +90,6 @@ export default function BuyerOrders() {
       if (!isLoaded) {
         throw new Error('Razorpay SDK failed to load. Please check your connection.');
       }
-      // 1. Init razorpay for existing order
       const res = await fetch('/api/payment/create-order-for-existing', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -89,7 +98,6 @@ export default function BuyerOrders() {
       const { success, data, error } = await res.json();
       if (!success) throw new Error(error);
 
-      // 2. Open Razorpay modal
       const options = {
         key: data.keyId,
         amount: data.amount,
@@ -100,7 +108,6 @@ export default function BuyerOrders() {
         prefill: data.prefill,
         theme: { color: '#4A7C3F' },
         handler: async (response) => {
-          // 3. Verify
           const verifyRes = await fetch('/api/payment/verify', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -149,6 +156,17 @@ export default function BuyerOrders() {
     <div className="page-container">
       <h1 className="page-title">📦 Procurement Orders</h1>
 
+      {/* Search bar */}
+      <div style={{ marginBottom: '1rem' }}>
+        <input
+          type="text"
+          placeholder="🔍 Search orders by crop, farmer, batch ID, courier..."
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          style={{ width: '100%', maxWidth: '450px' }}
+        />
+      </div>
+
       <div className="tabs">
         {['active', 'pending', 'completed'].map(t => (
           <button key={t} className={`tab ${tab === t ? 'active' : ''}`} onClick={() => setTab(t)}>
@@ -162,7 +180,7 @@ export default function BuyerOrders() {
 
       {filtered.length === 0 ? (
         <div className="card" style={{ textAlign: 'center', padding: '2rem', color: 'var(--bark)' }}>
-          No {TAB_LABELS[tab].toLowerCase()} orders right now.
+          {searchQuery ? `No results for "${searchQuery}"` : `No ${TAB_LABELS[tab].toLowerCase()} orders right now.`}
         </div>
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
@@ -173,7 +191,9 @@ export default function BuyerOrders() {
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', marginBottom: '0.5rem' }}>
                   <div>
                     <h3 style={{ fontSize: '1.05rem', color: 'var(--soil)' }}>{order.crop} supplied by {order.farmerName}</h3>
-                    <p style={{ fontSize: '0.85rem', color: 'var(--bark)' }}>{order.farmerDistrict}</p>
+                    <p style={{ fontSize: '0.85rem', color: 'var(--bark)' }}>
+                      📍 {order.farmerAddress ? `${order.farmerAddress}, ` : ''}{order.farmerDistrict}{order.farmerState ? `, ${order.farmerState}` : ''}
+                    </p>
                   </div>
                   <div style={{ display: 'flex', gap: '0.5rem', flexDirection: 'column', alignItems: 'flex-end' }}>
                     <StatusBadge status={getStatusLabel(order.status, order.paymentStatus)} />
@@ -189,41 +209,67 @@ export default function BuyerOrders() {
                   </div>
                 </div>
 
-                <div style={{ display: 'flex', gap: '2rem', fontSize: '0.9rem', color: 'var(--bark)', marginBottom: '0.75rem', flexWrap: 'wrap', padding: '0.5rem 0', borderTop: '1px solid #eee', borderBottom: '1px solid #eee' }}>
+                <div style={{ display: 'flex', gap: '2rem', fontSize: '0.9rem', color: 'var(--bark)', marginBottom: '0.5rem', flexWrap: 'wrap', padding: '0.5rem 0', borderTop: '1px solid #eee', borderBottom: '1px solid #eee' }}>
                   <span>Qty: <strong>{order.quantity}{order.unit === 'kg' ? 'kg' : 'q'}</strong></span>
                   <span>Price: <strong>₹{order.agreedPrice?.toLocaleString('en-IN')}/{order.unit === 'kg' ? 'kg' : 'q'}</strong></span>
                   <span>Total: <strong style={{ color: 'var(--leaf)' }}>₹{totalAmount.toLocaleString('en-IN')}</strong></span>
                 </div>
 
-                  <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
-                    {tab === 'pending' && order.status === 'checkout_pending' && (
-                      <button 
-                        className="btn-primary" 
-                        onClick={() => handlePayNow(order)}
-                        disabled={paymentLoadingId === order._id}
-                        style={{ fontSize: '0.85rem' }}
+                {/* Courier tracking badge */}
+                {order.shipmentId && (
+                  <div style={{
+                    display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap',
+                    marginBottom: '0.75rem', marginTop: '0.5rem',
+                  }}>
+                    <span style={{
+                      display: 'inline-flex', alignItems: 'center', gap: '0.3rem',
+                      background: 'rgba(39, 174, 96, 0.08)', padding: '0.35rem 0.7rem',
+                      borderRadius: '6px', fontSize: '0.78rem', fontWeight: 600, color: '#27ae60',
+                    }}>
+                      🚚 {order.courierPartner}: <code style={{ fontFamily: 'monospace', fontSize: '0.78rem' }}>{order.shipmentId}</code>
+                    </span>
+                    {order.courierTrackingUrl && (
+                      <a
+                        href={order.courierTrackingUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        style={{ fontSize: '0.78rem', color: 'var(--sky)', fontWeight: 600, textDecoration: 'none' }}
                       >
-                        {paymentLoadingId === order._id ? 'Processing...' : '💳 Pay Now'}
-                      </button>
-                    )}
-                    <Link href={`/buyer/track/${order._id}`} className="btn-secondary" style={{ fontSize: '0.85rem' }}>
-                      🚚 Track Delivery
-                    </Link>
-                    {tab === 'completed' && order.paymentStatus === 'paid' && (
-                      <Link href={`/buyer/rate/${order._id}`} className="btn-secondary" style={{ fontSize: '0.85rem' }}>
-                        ⭐ Rate Farmer
-                      </Link>
-                    )}
-                    {tab === 'completed' && order.paymentStatus === 'paid' && (
-                      <Link href={`/buyer/invoice/${order._id}`} className="btn-secondary" style={{ fontSize: '0.85rem' }}>
-                        🧾 View Invoice
-                      </Link>
+                        Track on {order.courierPartner} →
+                      </a>
                     )}
                   </div>
-                  {paymentError && paymentLoadingId === order._id && (
-                    <div style={{ color: 'red', fontSize: '0.85rem', marginTop: '0.5rem' }}>{paymentError}</div>
+                )}
+
+                <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+                  {tab === 'pending' && order.status === 'checkout_pending' && (
+                    <button 
+                      className="btn-primary" 
+                      onClick={() => handlePayNow(order)}
+                      disabled={paymentLoadingId === order._id}
+                      style={{ fontSize: '0.85rem' }}
+                    >
+                      {paymentLoadingId === order._id ? 'Processing...' : '💳 Pay Now'}
+                    </button>
+                  )}
+                  <Link href={`/buyer/track/${order._id}`} className="btn-secondary" style={{ fontSize: '0.85rem' }}>
+                    🚚 Track Delivery
+                  </Link>
+                  {tab === 'completed' && order.paymentStatus === 'paid' && (
+                    <Link href={`/buyer/rate/${order._id}`} className="btn-secondary" style={{ fontSize: '0.85rem' }}>
+                      ⭐ Rate Farmer
+                    </Link>
+                  )}
+                  {tab === 'completed' && order.paymentStatus === 'paid' && (
+                    <Link href={`/buyer/invoice/${order._id}`} className="btn-secondary" style={{ fontSize: '0.85rem' }}>
+                      🧾 View Invoice
+                    </Link>
                   )}
                 </div>
+                {paymentError && paymentLoadingId === order._id && (
+                  <div style={{ color: 'red', fontSize: '0.85rem', marginTop: '0.5rem' }}>{paymentError}</div>
+                )}
+              </div>
             );
           })}
         </div>

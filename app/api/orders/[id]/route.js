@@ -5,6 +5,17 @@ import Order from '@/lib/models/Order';
 import { addActivity } from '@/lib/activityServer';
 import { getFairPricingInsight } from '@/lib/fairPricing';
 
+// Courier tracking URL generators
+const COURIER_TRACKING_URLS = {
+  'Delhivery': (id) => `https://www.delhivery.com/track/package/${id}`,
+  'BlueDart': (id) => `https://www.bluedart.com/tracking/${id}`,
+  'DTDC': (id) => `https://www.dtdc.in/tracking/shipment-tracking.asp?id=${id}`,
+  'India Post': (id) => `https://www.indiapost.gov.in/_layouts/15/dop.portal.tracking/trackconsignment.aspx?id=${id}`,
+  'Ekart': (id) => `https://ekartlogistics.com/track/${id}`,
+  'Professional Couriers': (id) => `https://www.tpcindia.com/track.aspx?id=${id}`,
+  'Other': (id) => null,
+};
+
 export async function GET(request, { params }) {
   try {
     if (!mongoose.Types.ObjectId.isValid(params.id)) {
@@ -53,6 +64,34 @@ export async function PATCH(request, { params }) {
     }
     await dbConnect();
     const body = await request.json();
+
+    // Handle shipment ID update
+    if (body.shipmentId !== undefined || body.courierPartner !== undefined) {
+      const order = await Order.findById(params.id);
+      if (!order) return NextResponse.json({ error: 'Order not found' }, { status: 404 });
+
+      if (body.shipmentId) order.shipmentId = body.shipmentId;
+      if (body.courierPartner) {
+        order.courierPartner = body.courierPartner;
+        // Auto-generate tracking URL
+        const urlGenerator = COURIER_TRACKING_URLS[body.courierPartner];
+        if (urlGenerator && body.shipmentId) {
+          order.courierTrackingUrl = urlGenerator(body.shipmentId || order.shipmentId);
+        }
+      }
+      await order.save();
+
+      // Activity for buyer
+      await addActivity({
+        userId: order.buyerId,
+        role: 'buyer',
+        type: 'shipment_id_added',
+        message: `Shipment tracking added for your ${order.crop} order. Courier: ${order.courierPartner || 'N/A'}, Tracking ID: ${order.shipmentId}`,
+        meta: { orderId: order._id, shipmentId: order.shipmentId, courierPartner: order.courierPartner }
+      });
+
+      return NextResponse.json(order);
+    }
 
     if (body.advanceStep !== undefined) {
       const order = await Order.findById(params.id);

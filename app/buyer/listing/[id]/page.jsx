@@ -67,9 +67,13 @@ export default function BuyerListingDetail() {
         buyerName: user.businessName,
         crop: listing.crop,
         quantity: Number(form.quantity),
-        agreedPrice: Number(form.price), // Initial bid price
+        agreedPrice: Number(form.price),
         status: 'pending',
-        farmerDistrict: listing.farmerDistrict
+        farmerDistrict: listing.farmerDistrict,
+        buyerAddress: user.address || '',
+        buyerPincode: user.pincode || '',
+        buyerCity: user.city || '',
+        buyerState: user.state || '',
       }),
     });
 
@@ -92,6 +96,10 @@ export default function BuyerListingDetail() {
           quantity: listing.quantity,
           buyerId: user.id,
           buyerName: user.businessName,
+          buyerAddress: user.address || '',
+          buyerPincode: user.pincode || '',
+          buyerCity: user.city || '',
+          buyerState: user.state || '',
         }),
       });
       const { success, data, error } = await res.json();

@@ -12,7 +12,7 @@
   border-radius: 16px;
   padding: 2.5rem;
   width: 100%;
-  max-width: 520px;
+  max-width: 560px;
   box-shadow: 0 8px 32px var(--shadow);
 }
 
@@ -31,6 +31,155 @@
   line-height: 1.6;
 }
 
+/* ── Progress Indicator ───────────────────────── */
+.progressBar {
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 0;
+  margin-bottom: 1.75rem;
+  padding: 0 1rem;
+}
+
+.progressStep {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  position: relative;
+  flex: 1;
+}
+
+.progressDot {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: #e0d8ce;
+  color: var(--bark);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.8rem;
+  font-weight: 700;
+  z-index: 2;
+  transition: all 0.3s ease;
+  border: 2px solid transparent;
+}
+
+.progressDotActive {
+  background: var(--harvest);
+  color: var(--white);
+  border-color: var(--harvest);
+  box-shadow: 0 2px 8px rgba(212, 140, 45, 0.35);
+}
+
+.progressDotDone {
+  background: var(--leaf);
+  border-color: var(--leaf);
+  box-shadow: 0 2px 8px rgba(74, 124, 63, 0.35);
+}
+
+.progressLabel {
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: var(--bark);
+  margin-top: 0.4rem;
+  text-align: center;
+  white-space: nowrap;
+}
+
+.progressLine {
+  position: absolute;
+  top: 15px;
+  left: calc(50% + 16px);
+  width: calc(100% - 32px);
+  height: 3px;
+  background: #e0d8ce;
+  z-index: 1;
+  transition: background 0.3s ease;
+}
+
+.progressLineActive {
+  background: var(--leaf);
+}
+
+/* ── Step content animation ───────────────────── */
+.stepContent {
+  animation: fadeSlideIn 0.3s ease;
+}
+
+@keyframes fadeSlideIn {
+  from {
+    opacity: 0;
+    transform: translateX(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+/* ── Required asterisk ────────────────────────── */
+.required {
+  color: var(--danger);
+  font-size: 0.8rem;
+}
+
+/* ── Info tag ─────────────────────────────────── */
+.infoTag {
+  font-size: 0.7rem;
+  font-weight: 500;
+  color: var(--sky);
+  background: rgba(123, 175, 212, 0.12);
+  padding: 0.15rem 0.5rem;
+  border-radius: 12px;
+  margin-left: 0.5rem;
+}
+
+/* ── Password Strength ────────────────────────── */
+.strengthBar {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  margin-top: 0.4rem;
+}
+
+.strengthTrack {
+  flex: 1;
+  height: 5px;
+  background: #e0d8ce;
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.strengthFill {
+  height: 100%;
+  border-radius: 999px;
+  transition: width 0.4s ease, background 0.4s ease;
+}
+
+/* ── Summary Box ──────────────────────────────── */
+.summaryBox {
+  background: linear-gradient(135deg, var(--mist) 0%, rgba(234, 242, 234, 0.5) 100%);
+  border: 1px solid rgba(74, 124, 63, 0.15);
+  border-radius: 12px;
+  padding: 1.25rem;
+  margin-bottom: 1rem;
+}
+
+.summaryBox h4 {
+  font-size: 0.95rem;
+  color: var(--soil);
+  margin-bottom: 0.6rem;
+}
+
+.summaryBox p {
+  font-size: 0.85rem;
+  color: var(--bark);
+  line-height: 1.7;
+  margin: 0.15rem 0;
+}
+
+/* ── Existing Styles ──────────────────────────── */
 .row {
   display: flex;
   gap: 1rem;
@@ -77,6 +226,11 @@
   font-size: 1.05rem;
   font-weight: 600;
   line-height: 1.5;
+  transition: all 0.2s ease;
+}
+
+.submitBtn:disabled {
+  cursor: not-allowed;
 }
 
 .forgotText {
@@ -117,4 +271,6 @@
 @media (max-width: 560px) {
   .authCard { padding: 1.5rem; }
   .row { flex-direction: column; gap: 0; }
+  .progressLabel { font-size: 0.6rem; }
+  .progressDot { width: 28px; height: 28px; font-size: 0.7rem; }
 }
